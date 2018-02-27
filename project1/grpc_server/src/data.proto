@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+message Request {
+    string data = 1;
+}
+
+message QueryRequest {
+    string data = 1;
+}
+
+message Response {
+    string data = 1;
+}
+
+message QueryResponse {
+    string data = 1;
+}
+
+service Data {
+    rpc ping(Request) returns (Response) {}
+    rpc query(QueryRequest) returns (QueryResponse) {}
+}

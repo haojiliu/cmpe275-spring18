@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+message Request {
+    string data = 1;
+}
+
+message Response {
+    string data = 1;
+}
+
+service MonitorSlave {
+    rpc ping(Request) returns (Response) {}
+    rpc switchMode(QueryRequest) returns (QueryResponse) {}
+}
