@@ -11,4 +11,5 @@ message Response {
 service MonitorSlave {
     rpc ping(Request) returns (Response) {}
     rpc switchMode(QueryRequest) returns (QueryResponse) {}
+    rpc replicate(QueryRequest) returns (QueryResponse) {}
 }

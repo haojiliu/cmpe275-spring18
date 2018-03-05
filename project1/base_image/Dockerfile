@@ -12,3 +12,4 @@ RUN echo -e "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64\nexport PATH
 ADD ./config /srv/config
 RUN pip install --upgrade pip
 RUN pip install -r /srv/config/requirements.txt
+RUN pip3 install -r /srv/config/requirements-python3.txt

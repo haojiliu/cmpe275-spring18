@@ -3,8 +3,6 @@
 
 FROM cmpe275_base_image
 
-ADD ./src /srv/src
-
 # Install MongoDB.
 RUN \
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 && \
@@ -23,7 +21,3 @@ VOLUME /data/db /data/configdb
 
 # Define working directory.
 WORKDIR /data
-
-ENTRYPOINT "mongod --fork --logpath /var/log/mongod.log"
-
-CMD "python3 /srv/src/main.py"

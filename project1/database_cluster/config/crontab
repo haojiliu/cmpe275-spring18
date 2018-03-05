@@ -1,0 +1,6 @@
+# This file contains crons that:
+1. replicate from oplog every 2 hours
+2. snapshot everyday at 3 a.m
+
+The cron jobs are either enabled or disabled based on the role of this node
+i.e, the replicate job is disabled if master node

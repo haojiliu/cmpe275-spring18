@@ -1,0 +1,17 @@
+# This is the configuration for each type of nodes.
+database:
+  states:
+    1000:
+      name: blabla
+      type: blabla
+      action: blabla
+      endpoint: blabla
+      default_port: 3000
+ftp_serber:
+  states:
+    1000:
+      name: blabla
+      type: blabla
+      action: blabla
+      endpoint: blabla
+      default_port: 8001
