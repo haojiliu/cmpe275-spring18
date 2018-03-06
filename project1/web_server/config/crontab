@@ -1,0 +1,2 @@
+# This cron runs every minute
+* * * * * python /srv/src/cron_job.py

@@ -14,3 +14,7 @@ RUN pip install --upgrade pip
 RUN pip3 install --upgrade pip
 RUN pip install -r /srv/config/requirements.txt
 RUN pip3 install -r /srv/config/requirements-python3.txt
+
+RUN echo "deb http://download.opensuse.org/repositories/network:/messaging:/zeromq:/release-stable/Debian_9.0/ ./" >> /etc/apt/sources.list
+RUN wget https://download.opensuse.org/repositories/network:/messaging:/zeromq:/release-stable/Debian_9.0/Release.key -O- | sudo apt-key add
+RUN apt-get install libzmq3-dev

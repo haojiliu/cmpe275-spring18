@@ -21,40 +21,49 @@ A weather data service for user to:
 https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
 
 
+### random links
+
 https://en.wikipedia.org/wiki/State_machine_replication
 https://en.wikipedia.org/wiki/Paxos_(computer_science)
 https://raft.github.io
 https://en.wikipedia.org/wiki/Byzantine_fault_tolerance
 
-Initially we are going to support 3 copies, which supports at most one failure node.
-
-Each instance will have an identifier, which is also used to tell the ordering,
-e.g, node 1 has a priority in consensus making before node 2, given that both arrive
-at the same time.
-
-This system assumes that there will be no Byzantines failures occurring.
-
-We might not need an external monitor to do replica and fail over, I'm reading something
-on state machine replication and paxos and we can probably form a token ring among servers.
-For example for ftp servers each server will carry a monitor tool that keeps tracking itself
-and its peers, the leader election can be done automatically.
-
-The external monitor is still needed, but now it's responsibility is mainly pinging each registered service,
-and if anything dies, it notifies a person about the situation.
-
-In this case, the monitor(zookeeper alike) will also have a knowledge of the state machine, at least it
-knows all the states, so that when it pings it knows which machine is down or in a failure state
-
-TODO:
-* I'm going to draw a state machine for the state transitions, which defines any fail over, start position, exit state, etc.
-
-
-docker build -t cmpe275_web . --no-cache
-docker run -dit -p 9001:9001 -p 8080:80 cmpe275_web
 
 https://stackoverflow.com/questions/4906977/access-environment-variables-from-python
 
 https://docs.mongodb.com/manual/reference/limits/
+
+https://stackoverflow.com/questions/24318084/flask-make-response-with-large-files
+http://api.zeromq.org/3-2:zmq-proxy
+https://docs.python.org/2/library/sqlite3.html
+
+
+### Read, from web server to task scheduler proxy to actual db nodes
+* Client - Proxy - Server Structure
+
+### Write, pub-sub where web server publishes, all db nodes subscribe
+
+### sqlite db schema
+```
+CREATE TABLE etl_jobs (
+    [jobId] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    [flags] integer,
+    [created_at] text,
+    [updated_at] text,
+    [status] integer,
+    [client_ip] VARCHAR(160)  NOT NULL,
+    [file_path] VARCHAR(160)  NOT NULL);
+```
+### sample usage:
+```
+>>> conn = sqlite3.connect('tmp.db')
+>>> c = conn.cursor()
+>>> c.execute('select * from etl_jobs;')
+<sqlite3.Cursor object at 0x1030b4260>
+>>> print c.fetchone()
+(1, None, None, None, None, u'10,2,1,5', u'/tmp/23sdclw.gz')
+>>>
+```
 
 ## Set up local dev env
 
@@ -81,6 +90,14 @@ docker-compose up --scale db=3
 ### debug web server:
 ```
 tail -f /srv/logs/*.log -f /var/log/nginx/*.log
+```
+
+### useful docker cmds
+
+```
+docker system prune -a  # purge all to start over if your local is messed up
+docker ps -a
+docker-compose top
 ```
 
 ## Security

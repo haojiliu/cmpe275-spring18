@@ -8,32 +8,23 @@ services:
       - "8080:80"
       # Supervisor http access
       - "9001:9001"
+      - "30080:8080"
+      - "30081:8081"
     links:
       - grpc
       - ftp
       - db
     # So that wysiwyg
-    # volumes:
-    #   - ./m:/srv/m
+    volumes:
+      - ./web_server/src:/srv/src
     container_name: cmpe275_web
-    tty: true
-  grpc:
-    ports:
-      - "3000:3000"
-    build: ./grpc_server
-    container_name: cmpe275_grpc
-    tty: true
-  ftp:
-    ports:
-      - "2021:21"
-      - "30000-30009:30000-30009"
-    build: ./ftp_server
-    container_name: cmpe275_ftp
     tty: true
   db:
     ports:
       - "28017:28017"
       - "27017:27017"
-    build: ./database_cluster
+      - "30180:8080"
+      - "30181:8081"
+    build: ./database_node
     container_name: cmpe275_db
     tty: true
