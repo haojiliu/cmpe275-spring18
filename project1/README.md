@@ -17,6 +17,10 @@ A weather data service for user to:
 
 ## Design:
 
+### Architecture
+https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
+
+
 https://en.wikipedia.org/wiki/State_machine_replication
 https://en.wikipedia.org/wiki/Paxos_(computer_science)
 https://raft.github.io
@@ -51,6 +55,34 @@ docker run -dit -p 9001:9001 -p 8080:80 cmpe275_web
 https://stackoverflow.com/questions/4906977/access-environment-variables-from-python
 
 https://docs.mongodb.com/manual/reference/limits/
+
+## Set up local dev env
+
+
+* Fork this: https://github.com/haojiliu/cmpe275-spring18
+
+* On local do these:
+
+```
+cd base_image/
+docker build -t cmpe275_base_image .
+cd database_cluster/
+docker build -t cmpe275_db_base_image database_cluster/db_base_image/
+docker-compose build
+```
+
+### To scale 3 node db cluster for example:
+```
+docker-compose up --scale db=3
+```
+
+### play with db server:
+
+### debug web server:
+```
+tail -f /srv/logs/*.log -f /var/log/nginx/*.log
+```
+
 
 ## Testing:
 

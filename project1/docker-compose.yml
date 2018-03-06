@@ -1,27 +1,39 @@
 version: "2.0"
-# TODO: not ready, don't use
+# Author: Haoji Liu
 services:
-  # Node 1, a web server
-  app:
-    build: .
+  web:
+    build: ./web_server
     ports:
       # nginx listens to port 80
       - "8080:80"
       # Supervisor http access
       - "9001:9001"
     links:
-      - redis
-      - mongo
+      - grpc
+      - ftp
+      - db
     # So that wysiwyg
-    volumes:
-      - ./m:/srv/m
-    container_name: app
+    # volumes:
+    #   - ./m:/srv/m
+    container_name: cmpe275_web
     tty: true
-  # web cache
-  redis:
-    image: "redis:alpine"
-    container_name: redis
-  # https://hub.docker.com/_/mongo/
-  mongo:
-    image: "mongo:3"
-    container_name: mongo
+  grpc:
+    ports:
+      - "3000:3000"
+    build: ./grpc_server
+    container_name: cmpe275_grpc
+    tty: true
+  ftp:
+    ports:
+      - "2021:21"
+      - "30000-30009:30000-30009"
+    build: ./ftp_server
+    container_name: cmpe275_ftp
+    tty: true
+  db:
+    ports:
+      - "28017:28017"
+      - "27017:27017"
+    build: ./database_cluster
+    container_name: cmpe275_db
+    tty: true
