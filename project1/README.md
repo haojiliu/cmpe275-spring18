@@ -83,6 +83,15 @@ docker-compose up --scale db=3
 tail -f /srv/logs/*.log -f /var/log/nginx/*.log
 ```
 
+## Security
+
+* auth or limited access for a given IP range
+* password
+
+## Performance
+
+* rate limitation
+* load balance
 
 ## Testing:
 
