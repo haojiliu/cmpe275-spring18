@@ -20,6 +20,17 @@ A weather data service for user to:
 ### Architecture
 https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
 
+* Note that this is the phase 1, for prototyping
+* 3 nodes, web, db, task scheduler
+* web handles all incoming read/write requests
+* db node stores data, and listens from read/write sockets
+* task scheduler monitors nodes health, route read requests, broadcast write requests
+
+### Future TODOs:
+* sharding on data
+* cache on web server
+* make web server a fleet with web nodes, and use load balancing reverse proxy
+
 
 ### random links
 
