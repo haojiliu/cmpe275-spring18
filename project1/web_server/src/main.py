@@ -19,7 +19,7 @@ app = Flask('haoji')
 import zmq
 zmq_read_host = 'cmpe275_task_scheduler'
 zmq_write_host = 'cmpe275_web'
-read_port = 8080
+read_client_port = 5559
 write_port = 8081
 
 # sqlite connection
@@ -75,11 +75,11 @@ def api_data_v1():
     _log.info('yessss a read request received!!!!')
     # opens a new client to distinguish
     zmq_context = zmq.Context()
-    read_sock = zmq_context.socket(zmq.REQ)
+    read_client_sock = zmq_context.socket(zmq.REQ)
     connect_string = 'tcp://{}:{}'.format(
-        zmq_read_host, read_port)
-    read_sock.connect(connect_string)
-    return str(read(read_sock))
+        zmq_read_host, read_client_port)
+    read_client_sock.connect(connect_string)
+    return str(read(read_client_sock))
 
 # GET with variable
 @app.route('/post/<int:post_id>')

@@ -37,6 +37,9 @@ https://stackoverflow.com/questions/24318084/flask-make-response-with-large-file
 http://api.zeromq.org/3-2:zmq-proxy
 https://docs.python.org/2/library/sqlite3.html
 
+http://zguide.zeromq.org/page:all#toc14
+
+http://zguide.zeromq.org/py:msgqueue
 
 ### Read, from web server to task scheduler proxy to actual db nodes
 * Client - Proxy - Server Structure
