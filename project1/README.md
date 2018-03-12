@@ -92,14 +92,18 @@ docker build -t cmpe275_base_image .
 cd database_cluster/
 docker build -t cmpe275_db_base_image database_cluster/db_base_image/
 docker-compose build
+docker-compose up -d
 ```
 
-### To scale 3 node db cluster for example:
+### Moreover, to scale 3 node db cluster for example:
 ```
 docker-compose up --scale db=3
 ```
 
 ### play with db server:
+```
+python3 /srv/src/long_running_task.py
+```
 
 ### debug web server:
 ```
@@ -107,11 +111,11 @@ tail -f /srv/logs/*.log -f /var/log/nginx/*.log
 ```
 
 ### useful docker cmds
-
 ```
 docker system prune -a  # purge all to start over if your local is messed up
 docker ps -a
 docker-compose top
+docker-compose build --no-cache # to rebuild everything from scratch
 ```
 
 ## Security
@@ -121,8 +125,9 @@ docker-compose top
 
 ## Performance
 
-* rate limitation
-* load balance
+* rate limitation - not done yet
+* load balance - not done yet
+* stress test - not started yet
 
 ## Testing:
 
