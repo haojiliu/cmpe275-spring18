@@ -6,7 +6,7 @@ ADD ./src /srv/src
 
 RUN mkdir /srv/logs
 
-EXPOSE 80 443 9001
+EXPOSE 80 443 9002 5559 5560
 
 # Copy config files over
 ADD ./config/supervisord.conf /etc/supervisord.conf

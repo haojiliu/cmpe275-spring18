@@ -6,3 +6,4 @@ uwsgi
 pytest
 grpcio-tools
 pyyaml
+zmq

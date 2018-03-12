@@ -6,7 +6,9 @@ import threading
 import zmq
 
 zmq_read_host = 'cmpe275_task_scheduler'
+zmq_read_host = '172.18.0.2'
 zmq_write_host = 'cmpe275_web'
+zmq_write_host = '172.18.0.4'
 read_worker_port = 5560
 write_port = 8081
 
@@ -27,11 +29,6 @@ def bind_write_port(context):
   write_sock.setsockopt(zmq.SUBSCRIBE, b"")
   return write_sock
 
-while True:
-    message = socket.recv()
-    print("Received request: %s" % message)
-    socket.send(b"World")
-
 def read(sock):
   while True:
     print('waiting for read requests...')
@@ -49,11 +46,18 @@ def write(sock):
     print('Going to write the following to the db node: %s' % raw)
     time.sleep(3)
 
-def main(uname):
+def main():
   # ZeroMQ Context
   context = zmq.Context()
-  read_sock = bind_chat_port(context)
-  write_sock = bind_display_port(context)
+  try:
+    read_sock = bind_chat_port(context)
+    write_sock = bind_display_port(context)
+  except:
+    # time out, sleep and try again
+    print('connect to sockets failed, trying again in 1 min...')
+    time.sleep(60)
+    read_sock = bind_chat_port(context)
+    write_sock = bind_display_port(context)
 
   write_thread = threading.Thread(target=write, args=(write_sock))
   write_thread.daemon = True

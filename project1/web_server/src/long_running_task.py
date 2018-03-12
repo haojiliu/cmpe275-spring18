@@ -3,9 +3,7 @@ import zmq
 
 _log = logging.getLogger(__name__)
 
-zmq_read_host = 'cmpe275_web'
-zmq_write_host = zmq_read_host
-read_port = 8080
+zmq_write_host = '0.0.0.0'
 write_port = 8081
 
 CONST_STATUS_NEW = 1 << 0
@@ -29,6 +27,7 @@ while True:
   for job in c.execute('select * from etl_jobs;'):
     _log.info('going to process on job from table')
     _log.info(str(job))
+    print(str(job))
     # enqueue the job
     data = {
       'raw': 'a sample write task from web server'

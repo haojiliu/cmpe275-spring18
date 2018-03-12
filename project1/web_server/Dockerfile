@@ -6,7 +6,7 @@ ADD ./src /srv/src
 
 RUN mkdir /srv/logs
 
-EXPOSE 80 443 9001, 8080, 8081
+EXPOSE 443 9001 8081
 
 # Copy config files over
 COPY ./config/nginx.conf /etc/nginx/sites-available/app
@@ -17,9 +17,7 @@ ADD ./config/supervisord.conf /etc/supervisord.conf
 # RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 
 RUN ln -s /etc/nginx/sites-available/app /etc/nginx/sites-enabled
+RUN rm /etc/nginx/sites-enabled/default
 RUN nginx -t
-
-WORKDIR /srv/src
-RUN sqlite_db_bootstrap.sh
 
 CMD /usr/bin/supervisord -c /etc/supervisord.conf

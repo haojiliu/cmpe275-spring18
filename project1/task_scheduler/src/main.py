@@ -12,15 +12,10 @@ _log = logging.getLogger(__name__)
 
 registered_db_nodes = []
 
-zmq_read_host = 'cmpe275_task_scheduler'
+zmq_read_host = '*'
+#zmq_read_host = '172.18.0.2'
 read_client_port = 5559
 read_worker_port = 5560
-
-# TODO: initialize a binding proxy here between web and db nodes for queries
-#
-# while True:
-#     time.sleep(5)
-#     _log.info('trying to get a read request and distribute to one db node...')
 
 def main():
     """ main method """

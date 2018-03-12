@@ -10,14 +10,3 @@ RUN \
   apt-get update && \
   apt-get install -y mongodb-org && \
   rm -rf /var/lib/apt/lists/*
-
-# Expose ports.
-#   - 27017: process
-#   - 28017: http
-EXPOSE 27017
-EXPOSE 28017
-
-VOLUME /data/db /data/configdb
-
-# Define working directory.
-WORKDIR /data

@@ -1,4 +1,4 @@
-version: "2.0"
+version: "3"
 # Author: Haoji Liu
 services:
   web:
@@ -8,11 +8,8 @@ services:
       - "8080:80"
       # Supervisor http access
       - "9001:9001"
-      - "30080:8080"
-      - "30081:8081"
     links:
-      - grpc
-      - ftp
+      - task_scheduler
       - db
     # So that wysiwyg
     volumes:
@@ -23,8 +20,18 @@ services:
     ports:
       - "28017:28017"
       - "27017:27017"
-      - "30180:8080"
-      - "30181:8081"
+    # So that wysiwyg
+    volumes:
+      - ./database_node/src:/srv/src
     build: ./database_node
     container_name: cmpe275_db
+    tty: true
+  task_scheduler:
+    ports:
+      - "9002:9002" # supervisord
+    # So that wysiwyg
+    volumes:
+      - ./task_scheduler/src:/srv/src
+    build: ./task_scheduler
+    container_name: cmpe275_task_scheduler
     tty: true

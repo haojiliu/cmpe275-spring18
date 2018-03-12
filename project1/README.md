@@ -81,7 +81,7 @@ CREATE TABLE etl_jobs (
 
 ## Set up local dev env
 
-
+* if your docker-compose hangs, try `127.0.0.1 localunixsocket localunixsocket.local # these are for docker `
 * Fork this: https://github.com/haojiliu/cmpe275-spring18
 
 * On local do these:
