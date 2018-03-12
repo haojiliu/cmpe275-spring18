@@ -30,7 +30,9 @@ https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
 * sharding on data
 * cache on web server
 * make web server a fleet with web nodes, and use load balancing reverse proxy
-
+* database oplog replication
+* dynamic ip address binding on sockets
+* heartbeat monitor for db nodes
 
 ### random links
 
