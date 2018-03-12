@@ -25,7 +25,7 @@ c = conn.cursor()
 
 while True:
   for job in c.execute('select * from etl_jobs;'):
-    _log.info('going to process on job from table')
+    _log.info('going to process one job from table')
     _log.info(str(job))
     print(str(job))
     # enqueue the job

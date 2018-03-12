@@ -2,20 +2,29 @@
 # Haoji liu
 from datetime import datetime
 import json
-import logging
+import logging, sys
 # Third party module
 import requests
 from flask import Flask, render_template, request
 
 _log = logging.getLogger(__name__)
 
+_log.setLevel(logging.DEBUG)
+
+######################################
+# TODO: move all the crap below to another file
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+_log.addHandler(ch)
+
 # create a Flask app
 app = Flask('haoji')
 
-# TODO: move all the crap below to another file
 
 import zmq
-zmq_read_host = '172.18.0.2'
+zmq_read_host = '172.18.0.3'
 read_client_port = 5559
 # sqlite connection
 import sqlite3
@@ -25,21 +34,26 @@ CONST_STATUS_RUNNING = 1 << 1
 CONST_STATUS_DONE = 1 << 2
 CONST_STATUS_ERROR = 1 << 3
 
+# TODO: one context per uwsgi worker????
+zmq_context = zmq.Context()
+connect_string = 'tcp://{}:{}'.format(
+    zmq_read_host, read_client_port)
+
 def read(sock):
   message = 'read request from web server'
   data = {'raw': message}
-  read_sock.send_json(data)
+  sock.send_json(data)
   # wait for response
-  resp = read_sock.recv_json()
+  _log.info('sent the request and waiting in read()...')
+  resp = sock.recv()
   _log.info('got the response and quitting read()')
   return resp
 
 def write(post_data):
+  # TODO: move this to be one conn per uwsgi worker???
   conn = sqlite3.connect('/srv/tmp.db')
   # 1. write a job entry to local sqlite
   c = conn.cursor()
-  c.execute('select * from etl_jobs;')
-  _log.info(str(c.fetchone()))
 
   _log.info('going to write an entry to etl_jobs table')
 
@@ -51,6 +65,8 @@ def write(post_data):
   conn.commit()
   conn.close()
   return True
+
+######################################
 
 # Homepage
 @app.route('/')
@@ -64,13 +80,20 @@ def api_read_v1():
   else:
     # Read request
     _log.info('yessss a read request received!!!!')
-    # opens a new client to distinguish
-    zmq_context = zmq.Context()
-    read_client_sock = zmq_context.socket(zmq.REQ)
-    connect_string = 'tcp://{}:{}'.format(
-        zmq_read_host, read_client_port)
-    read_client_sock.bind(connect_string)
-    return str(read(read_client_sock))
+    resp = 'read response placeholder'
+    try:
+      # Open a new socket per request
+      read_client_sock = zmq_context.socket(zmq.REQ)
+      _log.info('read socket connecting to %s' % connect_string)
+      read_client_sock.connect(connect_string)
+      _log.info('read socket connected to %s' % connect_string)
+      resp = read(read_client_sock)
+    finally:
+      # Make sure it's closed
+      read_client_sock.disconnect(connect_string)
+      read_client_sock.close()
+
+    return str(resp)
 
 @app.route('/data/write/v1', methods=['GET','POST'])
 def api_write_v1():

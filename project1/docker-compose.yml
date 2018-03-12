@@ -17,9 +17,6 @@ services:
     container_name: cmpe275_web
     tty: true
   db:
-    ports:
-      - "28017:28017"
-      - "27017:27017"
     # So that wysiwyg
     volumes:
       - ./database_node/src:/srv/src

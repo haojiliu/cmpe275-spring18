@@ -16,5 +16,7 @@ WORKDIR /data
 
 
 ADD ./src /srv/src
-RUN chmod 777 /srv/src/run.sh
-CMD /srv/src/run.sh
+# We mount /srv/src as Volume, need to move the shell script to /tmp
+COPY ./src/run.sh /tmp/run.sh
+RUN chmod +x /tmp/run.sh
+CMD /tmp/run.sh

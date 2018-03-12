@@ -12,7 +12,7 @@ _log = logging.getLogger(__name__)
 
 registered_db_nodes = []
 
-zmq_read_host = '*'
+zmq_read_host = '0.0.0.0'
 #zmq_read_host = '172.18.0.2'
 read_client_port = 5559
 read_worker_port = 5560
@@ -34,7 +34,7 @@ def main():
     # TODO: again, if this is too high level, we can replace it with our own homebrew proxy module
     zmq.proxy(frontend, backend)
 
-    # We never get here…
+    # Code shouldn't reach here
     frontend.close()
     backend.close()
     context.term()
