@@ -81,6 +81,13 @@ CREATE TABLE etl_jobs (
 >>>
 ```
 
+
+### quick playground, this brings up a fresh ubuntu container immediately for you to play with:
+```
+docker run -it ubuntu
+```
+
+
 ## Set up local dev env
 
 * if your docker-compose hangs, try `127.0.0.1 localunixsocket localunixsocket.local # these are for docker `
@@ -120,6 +127,7 @@ tail -f /srv/logs/*.log -f /var/log/nginx/*.log
 ```
 docker system prune -a  # purge all to start over if your local is messed up
 docker ps -a
+
 docker-compose top
 docker-compose build --no-cache # to rebuild everything from scratch
 ```
