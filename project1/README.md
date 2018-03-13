@@ -91,10 +91,14 @@ CREATE TABLE etl_jobs (
 ```
 cd base_image/
 docker build -t cmpe275_base_image .
-cd database_cluster/
-docker build -t cmpe275_db_base_image database_cluster/db_base_image/
+cd database_node/
+docker build -t cmpe275_db_base_image database_node/db_base_image/
 docker-compose build
 docker-compose up -d
+```
+### To ssh into a container:
+```
+docker exec -it cmpe275_web bash
 ```
 
 ### Moreover, to scale 3 node db cluster for example:
