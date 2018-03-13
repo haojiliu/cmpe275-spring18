@@ -25,6 +25,9 @@ https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
 * web handles all incoming read/write requests
 * db node stores data, and listens from read/write sockets
 * task scheduler monitors nodes health, route read requests, broadcast write requests
+* Input: csv files/streaming
+* Output: stream of byte strings, in csv format
+* Interface: restful API
 
 ### Future TODOs:
 * sharding on data
