@@ -29,6 +29,27 @@ https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
 * Output: stream of byte strings, in csv format
 * Interface: restful API
 
+
+### API
+
+#### get
+* endpoint: /data/read/v1
+* method: GET
+* available query parameters: TBD
+
+
+#### post
+* endpoint: /data/write/v1
+* method: POST
+* available form parameters: TBD
+
+
+#### put
+TBD
+
+#### delete
+TBD
+
 ### Future TODOs:
 * sharding on data
 * cache on web server
