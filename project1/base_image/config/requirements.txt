@@ -7,3 +7,4 @@ pytest
 grpcio-tools
 pyyaml
 zmq
+sqlalchemy

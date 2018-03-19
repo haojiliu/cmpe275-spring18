@@ -4,17 +4,9 @@ import zmq
 # sqlite connection
 import sqlite3
 
+import constants
+
 _log = logging.getLogger(__name__)
-
-zmq_write_host = '0.0.0.0'
-write_port = 8081
-
-CONST_STATUS_NEW = 1 << 0
-CONST_STATUS_RUNNING = 1 << 1
-CONST_STATUS_DONE = 1 << 2
-CONST_STATUS_ERROR = 1 << 3
-
-DB_FILE_PATH = '/srv/tmp.db'
 
 def get_db_conn():
   """ create a database connection to the SQLite database
@@ -23,7 +15,7 @@ def get_db_conn():
   :return: Connection object or None
   """
   try:
-    conn = sqlite3.connect(DB_FILE_PATH)
+    conn = sqlite3.connect(constants.DB_FILE_PATH)
     return conn
   except Error as e:
     print(e)
@@ -34,7 +26,7 @@ def get_db_conn():
 zmq_context = zmq.Context()
 write_sock = zmq_context.socket(zmq.PUB)
 connect_string = 'tcp://{}:{}'.format(
-    zmq_write_host, write_port)
+    constants.zmq_write_host, constants.write_port)
 write_sock.bind(connect_string)
 
 def chunkify(data):
@@ -43,8 +35,10 @@ def chunkify(data):
 
 def main(conn):
   c = conn.cursor()
+  query_str = 'select * from etl_jobs where status == %d;' % constants.CONST_STATUS_NEW
   while True:
-    for job in c.execute('select * from etl_jobs where status == %d;' % CONST_STATUS_NEW):
+    # TODO: move to sqlalchemy
+    for job in c.execute(query_str):
       _log.info('going to process one job from table')
       _log.info(str(job))
       print(str(job))
@@ -60,7 +54,7 @@ def main(conn):
       write_sock.send_json(entry)
 
       # update status
-      query_str = 'update etl_jobs set status = %d where job_id == %d;' % (CONST_STATUS_DONE, job[0])
+      query_str = 'update etl_jobs set status = %d where job_id == %d;' % (constants.CONST_STATUS_DONE, job[0])
       print(query_str)
       c.execute(query_str)
       conn.commit()

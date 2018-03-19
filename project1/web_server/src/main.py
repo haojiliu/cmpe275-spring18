@@ -21,28 +21,37 @@ app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024 # max file size 32MB
 ######################################
 # TODO: move all the crap below to another file
 _log = logging.getLogger(__name__)
-_log.setLevel(logging.DEBUG)
-ch = logging.StreamHandler(sys.stdout)
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-_log.addHandler(ch)
+# _log.setLevel(logging.DEBUG)
+# ch = logging.StreamHandler(sys.stdout)
+# ch.setLevel(logging.DEBUG)
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# ch.setFormatter(formatter)
+# _log.addHandler(ch)
 
 import zmq
-zmq_read_host = '172.18.0.3'
-read_client_port = 5559
-# sqlite connection
 import sqlite3
 
-CONST_STATUS_NEW = 1 << 0
-CONST_STATUS_RUNNING = 1 << 1
-CONST_STATUS_DONE = 1 << 2
-CONST_STATUS_ERROR = 1 << 3
+import constants
 
 # TODO: one context per uwsgi worker????
 zmq_context = zmq.Context()
 connect_string = 'tcp://{}:{}'.format(
-    zmq_read_host, read_client_port)
+    constants.zmq_read_host, constants.read_client_port)
+
+from constants import LOG_FILENAME, LOG_BASE_DIR
+def bootstrap():
+  """
+  Returns: bool - True if bootstrap finished without error, False otherwise
+  """
+  filename = os.path.join(LOG_BASE_DIR, LOG_FILENAME)
+  logging.basicConfig(
+        filename=filename,
+        filemode='a+',
+        level=logging.INFO,
+        format='%(asctime)s %(message)s')
+
+  return True
+
 
 def read(sock, params):
   # TODO: add more params like table name, target station
@@ -63,7 +72,7 @@ def write(post_dict):
 
   current_timestamp = str(datetime.now())
   # Larger example that inserts many records at a time
-  entries = [(post_dict['client_ip'], post_dict['file_path'], 0, CONST_STATUS_NEW, current_timestamp),]
+  entries = [(post_dict['client_ip'], post_dict['file_path'], 0, constants.CONST_STATUS_NEW, current_timestamp),]
   c.executemany('INSERT INTO etl_jobs (client_ip,file_path,flags,status,created_at) VALUES (?, ?, ?, ?, ?)', entries)
   _log.info('done with writing one entry to etl_jobs')
   conn.commit()
@@ -75,6 +84,18 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_read_socket():
+  # Open a new socket per request
+  read_client_sock = zmq_context.socket(zmq.REQ)
+  read_client_sock.setsockopt(zmq.LINGER, 100)
+  # 10 sec read timeout
+  read_client_sock.setsockopt(zmq.RCVTIMEO, 1000)
+
+  _log.info('read socket connecting to %s' % connect_string)
+  read_client_sock.connect(connect_string)
+  _log.info('read socket connected to %s' % connect_string)
+  return read_client_sock
+
 # Homepage
 @app.route('/')
 def index():
@@ -82,22 +103,14 @@ def index():
 
 @app.route('/data/read/v1/<from_utc>/<to_utc>', methods=['GET','POST'])
 def api_read_v1(from_utc, to_utc):
+  _log.info('yes its a read request...')
   if request.method == 'POST':
     return 'POST method not supported'
   else:
     # Read request
-    _log.info('yessss a read request received!!!!')
     resp = 'read response placeholder'
     try:
-      # Open a new socket per request
-      read_client_sock = zmq_context.socket(zmq.REQ)
-      read_client_sock.setsockopt(zmq.LINGER, 100)
-      # 10 sec read timeout
-      read_client_sock.setsockopt(zmq.RCVTIMEO, 1000)
-
-      _log.info('read socket connecting to %s' % connect_string)
-      read_client_sock.connect(connect_string)
-      _log.info('read socket connected to %s' % connect_string)
+      read_client_sock = get_read_socket()
       params = {
         'from_utc': from_utc,
         'to_utc': to_utc
@@ -119,9 +132,7 @@ def uploaded_file(filename):
 
 @app.route('/data/upload/v1', methods=['GET','POST'])
 def api_write_v1():
-  _log.info('noooo a write request received!!!!')
   if request.method == 'POST':
-    _log.info('a post request...')
     # check if the post request has the file part
     if 'file' not in request.files:
       _log.info('No file part')
@@ -142,7 +153,6 @@ def api_write_v1():
         'file_path': fpath
       }
       _log.info(post_data)
-      _log.info(fpath)
       write(post_data)
       return redirect(url_for('uploaded_file',
                               filename=filename))
@@ -157,4 +167,5 @@ def api_write_v1():
   '''
 
 if __name__ == '__main__':
+  bootstrap()
   app.run(host='0.0.0.0', debug=True)

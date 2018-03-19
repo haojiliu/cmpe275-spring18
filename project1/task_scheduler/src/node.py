@@ -5,6 +5,8 @@ from datetime import datetime
 
 import sqlite3
 
+import constants
+
 # TODO: use sqlalchemy
 class Node:
   def __init__(self, type):
@@ -28,7 +30,7 @@ class Node:
   def create(node_type):
     new_node = Node(node_type)
     # TODO: move this to be one conn per uwsgi worker???
-    conn = sqlite3.connect('/srv/tmp.db')
+    conn = sqlite3.connect(constants.DB_FILE_PATH)
     # 1. write a job entry to local sqlite
     c = conn.cursor()
     _log.info('going to write the new node')
