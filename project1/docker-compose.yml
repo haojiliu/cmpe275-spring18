@@ -26,6 +26,7 @@ services:
   task_scheduler:
     ports:
       - "9002:9002" # supervisord
+      - "8082:80" # monitor
     # So that wysiwyg
     volumes:
       - ./task_scheduler/src:/srv/src

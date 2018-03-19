@@ -46,11 +46,10 @@ connect_string = 'tcp://{}:{}'.format(
 
 def read(sock, params):
   # TODO: add more params like table name, target station
-  message = 'read request from web server'
   sock.send_json(params)
   # wait for response
   _log.info('sent the request and waiting in read()...')
-  resp = sock.recv()
+  resp = sock.recv_json()
   _log.info('got the response and quitting read()')
   return resp
 
@@ -64,7 +63,7 @@ def write(post_dict):
 
   current_timestamp = str(datetime.now())
   # Larger example that inserts many records at a time
-  entries = [(post_dict['client_ip'], post_dict['fpath'], 0, CONST_STATUS_NEW, current_timestamp),]
+  entries = [(post_dict['client_ip'], post_dict['file_path'], 0, CONST_STATUS_NEW, current_timestamp),]
   c.executemany('INSERT INTO etl_jobs (client_ip,file_path,flags,status,created_at) VALUES (?, ?, ?, ?, ?)', entries)
   _log.info('done with writing one entry to etl_jobs')
   conn.commit()
@@ -81,7 +80,7 @@ def allowed_file(filename):
 def index():
   return 'Hello World'
 
-@app.route('/data/read/v1/<from>/<to>', methods=['GET','POST'])
+@app.route('/data/read/v1/<from_utc>/<to_utc>', methods=['GET','POST'])
 def api_read_v1(from_utc, to_utc):
   if request.method == 'POST':
     return 'POST method not supported'
@@ -92,6 +91,10 @@ def api_read_v1(from_utc, to_utc):
     try:
       # Open a new socket per request
       read_client_sock = zmq_context.socket(zmq.REQ)
+      read_client_sock.setsockopt(zmq.LINGER, 100)
+      # 10 sec read timeout
+      read_client_sock.setsockopt(zmq.RCVTIMEO, 1000)
+
       _log.info('read socket connecting to %s' % connect_string)
       read_client_sock.connect(connect_string)
       _log.info('read socket connected to %s' % connect_string)
@@ -100,8 +103,11 @@ def api_read_v1(from_utc, to_utc):
         'to_utc': to_utc
       }
       resp = read(read_client_sock, params)
+    except Exception as e:
+      _log.info(e)
     finally:
       # Make sure it's closed
+      _log.info('closing the read socket...')
       read_client_sock.disconnect(connect_string)
       read_client_sock.close()
 
@@ -131,10 +137,13 @@ def api_write_v1():
       filename = secure_filename(file.filename)
       fpath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
       file.save(fpath)
-      post_data = dict(request.form)
+      post_data = {
+        'client_ip': request.remote_addr,
+        'file_path': fpath
+      }
       _log.info(post_data)
       _log.info(fpath)
-      write(fpath)
+      write(post_data)
       return redirect(url_for('uploaded_file',
                               filename=filename))
   return '''

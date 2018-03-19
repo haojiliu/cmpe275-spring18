@@ -16,6 +16,7 @@ from pymongo import MongoClient
 client = MongoClient()
 client = MongoClient('localhost', 27017)
 db = client.main_db
+weather_data = db['weather_data']
 
 def connect_read_port(context):
   # to get read requests
@@ -40,15 +41,19 @@ def read(sock):
   while True:
     print('waiting for read requests...')
     data =sock.recv_json()
-    raw = data.get('raw', 'sample read data')
-    print(raw)
+    print(data)
+    # TODO: filter by time period instead of returning all
+    cursor = weather_data.find({})
+    resp = [doc['station'] for doc in cursor]
+    print(resp)
+    # resp = mydb.mytable.find({"date": {"$lt": datetime.datetime(2015, 12, 1)}}).sort("author")
+    sock.send_json({
+      'raw': resp
+    })
     time.sleep(3)
-    sock.send(b'Query result: Some sample read data')
-    # for post in mydb.mytable.find({"date": {"$lt": datetime.datetime(2015, 12, 1)}}).sort("author"):
-    # ...    post
 
 def _write(data_dict):
-  db.weather.insert_one(data_dict)
+  weather_data.insert_one(data_dict)
 
 def write(sock):
   """Each message received will be one entry in the db"""
@@ -56,13 +61,14 @@ def write(sock):
     print('waiting for write requests...')
     data = sock.recv_json()
     raw = data.get('station', 'placeholder write data from db node itself...')
-    print('Going to write the following to the db node: %s' % raw)
+    print('Going to write the following station to the db node: %s' % raw)
     # db.data.insert({
     #     "station": // station name
     #     "timestamp_utc": // the weather data were gathered at
     #     "raw": // all columns except the station column
     #     "created_at_utc": // this row is inserted at
     #   })
+    print(data)
     _write(data)
     time.sleep(3)
 

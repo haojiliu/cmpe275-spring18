@@ -26,9 +26,3 @@ def check_health(node_dict):
   conn.commit()
   conn.close()
   return True
-
-def data_intaker(fpath):
-  fp = sys.open(fpath)
-  # TODO: unzip binary file
-  unzipped_fp = preprocess(fp)
-  for line in

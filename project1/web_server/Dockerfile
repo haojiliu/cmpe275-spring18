@@ -6,7 +6,7 @@ ADD ./src /srv/src
 
 RUN mkdir /srv/logs
 
-EXPOSE 443 9001 8081
+EXPOSE 443 9001 8081 80
 
 # Copy config files over
 COPY ./config/nginx.conf /etc/nginx/sites-available/app
