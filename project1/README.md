@@ -25,6 +25,36 @@ https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
 * web handles all incoming read/write requests
 * db node stores data, and listens from read/write sockets
 * task scheduler monitors nodes health, route read requests, broadcast write requests
+* Input: csv files/streaming
+* Output: stream of byte strings, in csv format
+* Interface: restful API
+
+
+### API
+
+#### get
+* endpoint: /data/read/v1
+* method: GET
+* available query parameters: 
+..* from_timestamp
+..* to_timestamp
+..* location
+..* facets
+..* token
+..* pagination
+
+
+#### post
+* endpoint: /data/write/v1
+* method: POST
+* available form parameters: TBD
+
+
+#### put
+TBD
+
+#### delete
+TBD
 
 ### MongoDB schema
 
@@ -43,7 +73,9 @@ main_db.weather.insert_one(
 * sharding on data
 * cache on web server
 * make web server a fleet with web nodes, and use load balancing reverse proxy
-
+* database oplog replication
+* dynamic ip address binding on sockets
+* heartbeat monitor for db nodes
 
 ### random links
 
@@ -92,6 +124,13 @@ CREATE TABLE etl_jobs (
 >>>
 ```
 
+
+### quick playground, this brings up a fresh ubuntu container immediately for you to play with:
+```
+docker run -it ubuntu
+```
+
+
 ## Set up local dev env
 
 * if your docker-compose hangs, try `127.0.0.1 localunixsocket localunixsocket.local # these are for docker `
@@ -102,10 +141,14 @@ CREATE TABLE etl_jobs (
 ```
 cd base_image/
 docker build -t cmpe275_base_image .
-cd database_cluster/
-docker build -t cmpe275_db_base_image database_cluster/db_base_image/
+cd database_node/
+docker build -t cmpe275_db_base_image database_node/db_base_image/
 docker-compose build
 docker-compose up -d
+```
+### To ssh into a container:
+```
+docker exec -it cmpe275_web bash
 ```
 
 ### Moreover, to scale 3 node db cluster for example:
@@ -127,6 +170,7 @@ tail -f /srv/logs/*.log -f /var/log/nginx/*.log
 ```
 docker system prune -a  # purge all to start over if your local is messed up
 docker ps -a
+
 docker-compose top
 docker-compose build --no-cache # to rebuild everything from scratch
 ```
