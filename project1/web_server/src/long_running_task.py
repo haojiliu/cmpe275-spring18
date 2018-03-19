@@ -23,14 +23,26 @@ import sqlite3
 conn = sqlite3.connect('/srv/tmp.db')
 c = conn.cursor()
 
+def chunkify(data):
+  """In case one file contains too much data"""
+  yield data
+
 while True:
-  for job in c.execute('select * from etl_jobs;'):
+  for job in c.execute('select * from etl_jobs where status == %d;' % CONST_STATUS_NEW):
     _log.info('going to process one job from table')
     _log.info(str(job))
     print(str(job))
-    # enqueue the job
-    data = {
-      'raw': 'a sample write task from web server'
+
+    entry =
+    {
+      "station": 'test station',
+      "timestamp_utc": "2018-03-18 12:00:00",
+      "raw": "12.3, 32.2, sw, 411.2, 2341",
+      "created_at_utc": "2018-03-19 12:00:00"
     }
-    write_sock.send_json(data)
-  time.sleep(5)
+    write_sock.send_json(entry)
+    # update status
+    c.execute('update etl_jobs set status = %d where id = %d', (CONST_STATUS_DONE, job(0)))
+    conn.commit()
+
+  time.sleep(60)

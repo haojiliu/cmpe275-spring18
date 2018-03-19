@@ -26,6 +26,19 @@ https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
 * db node stores data, and listens from read/write sockets
 * task scheduler monitors nodes health, route read requests, broadcast write requests
 
+### MongoDB schema
+
+```
+main_db.weather.insert_one(
+  {
+    "station": // station name
+    "timestamp_utc": // the weather data were gathered at
+    "raw": // all columns except the station column
+    "created_at_utc": // this row is inserted at
+  }
+  )
+
+```
 ### Future TODOs:
 * sharding on data
 * cache on web server
