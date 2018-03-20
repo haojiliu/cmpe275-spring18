@@ -8,6 +8,8 @@ services:
       - "8080:80"
       # Supervisor http access
       - "9001:9001"
+      # write port for other nodes to reach
+      - "8081:8081"
     links:
       - task_scheduler
       - db
@@ -17,7 +19,6 @@ services:
     container_name: cmpe275_web
     tty: true
   db:
-    # So that wysiwyg
     volumes:
       - ./database_node/src:/srv/src
     build: ./database_node
@@ -27,6 +28,8 @@ services:
     ports:
       - "9002:9002" # supervisord
       - "8082:80" # monitor
+      - "5559:5559" # read client port
+      - "5560:5560" # read worker port
     # So that wysiwyg
     volumes:
       - ./task_scheduler/src:/srv/src

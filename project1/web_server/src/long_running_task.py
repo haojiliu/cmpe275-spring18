@@ -29,9 +29,22 @@ connect_string = 'tcp://{}:{}'.format(
     constants.zmq_write_host, constants.write_port)
 write_sock.bind(connect_string)
 
-def chunkify(data):
+def chunkify(rows):
   """In case one file contains too much data"""
   yield data
+
+def process_job(job):
+  return {
+    "station": 'test station',
+    "timestamp_utc": "2018-03-18 12:00:00",
+    "raw": "12.3, 32.2, sw, 411.2, 2341",
+    "created_at_utc": "2018-03-19 12:00:00"
+  }
+  fpath = None
+  job_dict = {}
+  with open(fpath) as f:
+    for line in f:
+      yield line
 
 def main(conn):
   c = conn.cursor()
@@ -43,15 +56,9 @@ def main(conn):
       _log.info(str(job))
       print(str(job))
 
-      entry = {
-        "station": 'test station',
-        "timestamp_utc": "2018-03-18 12:00:00",
-        "raw": "12.3, 32.2, sw, 411.2, 2341",
-        "created_at_utc": "2018-03-19 12:00:00"
-      }
-      _log.info('going to publush the data to all db nodes...')
-
-      write_sock.send_json(entry)
+      for entry in process_job(job):
+        _log.info('going to publish the data to all db nodes...')
+        write_sock.send_json(entry)
 
       # update status
       query_str = 'update etl_jobs set status = %d where job_id == %d;' % (constants.CONST_STATUS_DONE, job[0])
