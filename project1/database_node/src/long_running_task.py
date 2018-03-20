@@ -5,12 +5,7 @@ import threading
 
 import zmq
 
-zmq_read_host = 'cmpe275_task_scheduler'
-zmq_read_host = '172.18.0.3'
-zmq_write_host = 'cmpe275_web'
-zmq_write_host = '172.18.0.4'
-read_worker_port = 5560
-write_port = 8081
+import constants
 
 from pymongo import MongoClient
 client = MongoClient()
@@ -22,7 +17,7 @@ def connect_read_port(context):
   # to get read requests
   read_sock = context.socket(zmq.REP)
   connect_string = 'tcp://{}:{}'.format(
-      zmq_read_host, read_worker_port)
+      constants.zmq_read_host, constants.read_worker_port)
   print('read addr is %s' % connect_string)
   read_sock.connect(connect_string)
   return read_sock
@@ -31,7 +26,7 @@ def connect_write_port(context):
   # to get write requests
   write_sock = context.socket(zmq.SUB)
   connect_string = 'tcp://{}:{}'.format(
-      zmq_write_host, write_port)
+      constants.zmq_write_host, constants.write_port)
   print('write addr is %s' % connect_string)
   write_sock.connect(connect_string)
   write_sock.setsockopt(zmq.SUBSCRIBE, b"")

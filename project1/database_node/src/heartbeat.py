@@ -1,6 +1,8 @@
 import time
 
-# TODO: register on task scheduler
+# TODO: register
+def register():
+  pass
 
 while True:
   # TODO: send heartbeat to task scheduler
