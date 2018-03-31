@@ -10,9 +10,9 @@ services:
       - "9001:9001"
       # write port for other nodes to reach
       - "8081:8081"
-    links:
-      - task_scheduler
-      - db
+    # links:
+    #   - task_scheduler
+    #   - db
     # So that wysiwyg
     volumes:
       - ./web_server/src:/srv/src

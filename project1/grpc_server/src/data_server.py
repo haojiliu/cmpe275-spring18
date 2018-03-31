@@ -12,3 +12,9 @@ class DataServer(data_pb2_grpc.DataServicer):
         # connecting to database, and return the response in a protobuf format
         print(request.data)
         return data_pb2.QueryResponse(data='query pong')
+
+    def upload(self, request, context):
+        # Here is the main logic on handling data uploads,
+        # connecting to database, and return the response in a protobuf format
+        print(request.data)
+        return data_pb2.QueryResponse(data='query pong')

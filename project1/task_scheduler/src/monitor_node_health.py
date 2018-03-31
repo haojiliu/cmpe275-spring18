@@ -15,7 +15,7 @@ def check_health(node_dict):
   # 1. write a job entry to local sqlite
   c = conn.cursor()
 
-  for job in c.execute('select * from etl_jobs;'):
+  for job in c.execute('select * from nodes;'):
     last_updated_time = datetime.strptime(job.updated_at, '%b %d %Y %I:%M%p')
     if datetime.now() - last_updated_time > MIN_HEARTBEAT_INTERVAL * 2:
       # TODO: use sqlalchemy
