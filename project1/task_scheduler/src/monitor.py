@@ -10,19 +10,19 @@ app = Flask('haoji')
 # Homepage
 @app.route('/')
 def index():
-  return 'Hello World'
+  return 'This is task scheduler'
 
-@app.route('/register/<node_type>', methods=['GET'])
-def register(node_type):
+@app.route('/register/<node_ip>', methods=['GET'])
+def register(node_ip):
   print('yessss a node trying to register!!!!')
   # TODO: register the node
-  new_node = Node.create(constants.node_type_string_to_constant[node_type])
+  new_node = Node.create(node_ip)
   return new_node.id
 
-@app.route('/ping/<node_id>', methods=['GET'])
-def ping(node_id):
+@app.route('/ping/<node_ip>', methods=['GET'])
+def ping(node_ip):
   print('yessss a node trying to ping!!!!')
-  Node.touch(node_id)
+  Node.touch(node_ip)
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', debug=True)

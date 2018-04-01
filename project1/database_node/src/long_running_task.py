@@ -74,7 +74,6 @@ def main():
     context = zmq.Context()
     read_sock = connect_read_port(context)
     write_sock = connect_write_port(context)
-
     write_thread = threading.Thread(target=write, args=(write_sock,))
     write_thread.daemon = True
     write_thread.start()

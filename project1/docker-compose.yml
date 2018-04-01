@@ -1,22 +1,30 @@
 version: "3"
 # Author: Haoji Liu
 services:
-  web:
-    build: ./web_server
-    ports:
-      # nginx listens to port 80
-      - "8080:80"
-      # Supervisor http access
-      - "9001:9001"
-      # write port for other nodes to reach
-      - "8081:8081"
-    # links:
-    #   - task_scheduler
-    #   - db
-    # So that wysiwyg
+  # web:
+  #   build: ./web_server
+  #   ports:
+  #     # nginx listens to port 80
+  #     - "8080:80"
+  #     # Supervisor http access
+  #     - "9001:9001"
+  #     # write port for other nodes to reach
+  #     - "8081:8081"
+  #   # links:
+  #   #   - task_scheduler
+  #   #   - db
+  #   # So that wysiwyg
+  #   volumes:
+  #     - ./web_server/src:/srv/src
+  #   container_name: cmpe275_web
+  #   tty: true
+  grpc:
     volumes:
-      - ./web_server/src:/srv/src
-    container_name: cmpe275_web
+      - ./grpc_server/src:/srv/src
+    build: ./grpc_server
+    container_name: cmpe275_grpc
+    ports:
+      - "3000:3000" # for local to make grpc call to container
     tty: true
   db:
     volumes:

@@ -6,9 +6,6 @@ ADD ./src /srv/src
 
 RUN mkdir /srv/logs
 
-EXPOSE 9003 5678
+EXPOSE 3000 8081
 
-COPY ./config/tmp.db /srv/tmp.db
-ADD ./config/supervisord.conf /etc/supervisord.conf
-
-CMD /usr/bin/supervisord -c /etc/supervisord.conf
+CMD python3 /tmp/heartbeat.py

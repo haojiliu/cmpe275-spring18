@@ -35,7 +35,7 @@ https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
 #### get
 * endpoint: /data/read/v1
 * method: GET
-* available query parameters: 
+* available query parameters:
 ..* from_timestamp
 ..* to_timestamp
 ..* location
