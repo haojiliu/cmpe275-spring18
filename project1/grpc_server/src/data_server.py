@@ -1,3 +1,4 @@
+import time
 import grpc
 import data_pb2
 import data_pb2_grpc
@@ -29,6 +30,10 @@ def get_write_socket():
   write_sock = zmq_context.socket(zmq.PUB)
 
   write_sock.bind(write_connect_string)
+  # TODO: try not rebind with every grpc call, let's do a timeout of 4 hour or something
+  time.sleep(1) # this is needed so that we talk after the bind is complete!
+  print('write socket connected to %s' % write_connect_string)
+
   return write_sock
 
 def get_read_socket():
@@ -40,16 +45,13 @@ def get_read_socket():
 
   print('read socket connecting to %s' % read_connect_string)
   read_client_sock.connect(read_connect_string)
-  print('read socket connected to %s' % read_connect_string)
   return read_client_sock
 
 def read(sock, params):
   # TODO: add more params like table name, target station
   sock.send_json(params)
   # wait for response
-  print('sent the request and waiting in read()...')
   resp = sock.recv_json()
-  print('got the response and quitting read()')
   return resp
 
 def try_read(params):
@@ -60,11 +62,11 @@ def try_read(params):
     return resp
   except Exception as e:
     print(e)
-    return 'something wrong with read...'
+    return {'msg': 'something wrong with read...'}
   finally:
     # Make sure it's closed
-    print('closing the read socket...')
     if read_client_sock:
+      # print('closing the read socket...')
       read_client_sock.disconnect(read_connect_string)
       read_client_sock.close()
 
@@ -74,11 +76,12 @@ def write(payload):
     write_sock = get_write_socket()
     write_sock.send_json(payload)
   except Exception as e:
+    print('something wrong with write...')
     print(e)
   finally:
     # Make sure it's closed
-    print('closing the read socket...')
     if write_sock:
+      print('closing the write socket...')
       write_sock.disconnect(write_connect_string)
       write_sock.close()
 
@@ -88,11 +91,15 @@ def resp_to_byte_string(resp):
   return '\n'.join(resp.get('raw', 'something wrong...')).encode()
 
 class DataServer(data_pb2_grpc.CommunicationServiceServicer):
+  # def __init__(self, read_sock, write_sock):
+  #   self.read_sock = read_sock
+  #   self.write_sock = write_sock
   def MessageHandler(self, request, context):
     if request.putRequest.metaData.uuid:
       print('this is a put request')
-      write({'data': str(request.putRequest.datFragment.data)})
-      print(request.putRequest.datFragment)
+      payload = {'raw': request.putRequest.datFragment.data.decode(),
+              'timestamp_utc': request.putRequest.datFragment.timestamp_utc}
+      write(payload)
       return data_pb2.Response(
         isSuccess=True,
         msg="put data successfully the grpc server!")

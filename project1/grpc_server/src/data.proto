@@ -45,7 +45,8 @@ message MetaData {
 }
 
 message DatFragment {
-  bytes data = 1;
+  string timestamp_utc = 1;
+  bytes data = 2;
 }
 
 service CommunicationService {

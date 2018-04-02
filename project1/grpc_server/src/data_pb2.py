@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='data.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\ndata.proto\"\xb8\x01\n\x07Request\x12\x12\n\nfromSender\x18\x01 \x01(\t\x12\x12\n\ntoReceiver\x18\x02 \x01(\t\x12\x16\n\x0eoriginalSender\x18\x03 \x01(\t\x12\x1c\n\x04ping\x18\x06 \x01(\x0b\x32\x0c.PingRequestH\x00\x12!\n\nputRequest\x18\x07 \x01(\x0b\x32\x0b.PutRequestH\x00\x12!\n\ngetRequest\x18\x08 \x01(\x0b\x32\x0b.GetRequestH\x00\x42\t\n\x07payload\"j\n\x08Response\x12\x11\n\tisSuccess\x18\x01 \x01(\x08\x12\x0b\n\x03msg\x18\x02 \x01(\t\x12\x1b\n\x08metaData\x18\x03 \x01(\x0b\x32\t.MetaData\x12!\n\x0b\x64\x61tFragment\x18\x04 \x01(\x0b\x32\x0c.DatFragment\"\x1a\n\x0bPingRequest\x12\x0b\n\x03msg\x18\x01 \x01(\t\"L\n\nPutRequest\x12\x1b\n\x08metaData\x18\x01 \x01(\x0b\x32\t.MetaData\x12!\n\x0b\x64\x61tFragment\x18\x02 \x01(\x0b\x32\x0c.DatFragment\"L\n\nGetRequest\x12\x1b\n\x08metaData\x18\x01 \x01(\x0b\x32\t.MetaData\x12!\n\x0bqueryParams\x18\x02 \x01(\x0b\x32\x0c.QueryParams\"/\n\x0bQueryParams\x12\x10\n\x08\x66rom_utc\x18\x01 \x01(\t\x12\x0e\n\x06to_utc\x18\x02 \x01(\t\"B\n\x08MetaData\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x15\n\rnumOfFragment\x18\x02 \x01(\x05\x12\x11\n\tmediaType\x18\x03 \x01(\x05\"\x1b\n\x0b\x44\x61tFragment\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x32=\n\x14\x43ommunicationService\x12%\n\x0eMessageHandler\x12\x08.Request\x1a\t.Responseb\x06proto3')
+  serialized_pb=_b('\n\ndata.proto\"\xb8\x01\n\x07Request\x12\x12\n\nfromSender\x18\x01 \x01(\t\x12\x12\n\ntoReceiver\x18\x02 \x01(\t\x12\x16\n\x0eoriginalSender\x18\x03 \x01(\t\x12\x1c\n\x04ping\x18\x06 \x01(\x0b\x32\x0c.PingRequestH\x00\x12!\n\nputRequest\x18\x07 \x01(\x0b\x32\x0b.PutRequestH\x00\x12!\n\ngetRequest\x18\x08 \x01(\x0b\x32\x0b.GetRequestH\x00\x42\t\n\x07payload\"j\n\x08Response\x12\x11\n\tisSuccess\x18\x01 \x01(\x08\x12\x0b\n\x03msg\x18\x02 \x01(\t\x12\x1b\n\x08metaData\x18\x03 \x01(\x0b\x32\t.MetaData\x12!\n\x0b\x64\x61tFragment\x18\x04 \x01(\x0b\x32\x0c.DatFragment\"\x1a\n\x0bPingRequest\x12\x0b\n\x03msg\x18\x01 \x01(\t\"L\n\nPutRequest\x12\x1b\n\x08metaData\x18\x01 \x01(\x0b\x32\t.MetaData\x12!\n\x0b\x64\x61tFragment\x18\x02 \x01(\x0b\x32\x0c.DatFragment\"L\n\nGetRequest\x12\x1b\n\x08metaData\x18\x01 \x01(\x0b\x32\t.MetaData\x12!\n\x0bqueryParams\x18\x02 \x01(\x0b\x32\x0c.QueryParams\"/\n\x0bQueryParams\x12\x10\n\x08\x66rom_utc\x18\x01 \x01(\t\x12\x0e\n\x06to_utc\x18\x02 \x01(\t\"B\n\x08MetaData\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x15\n\rnumOfFragment\x18\x02 \x01(\x05\x12\x11\n\tmediaType\x18\x03 \x01(\x05\"2\n\x0b\x44\x61tFragment\x12\x15\n\rtimestamp_utc\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x32=\n\x14\x43ommunicationService\x12%\n\x0eMessageHandler\x12\x08.Request\x1a\t.Responseb\x06proto3')
 )
 
 
@@ -344,8 +344,15 @@ _DATFRAGMENT = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='data', full_name='DatFragment.data', index=0,
-      number=1, type=12, cpp_type=9, label=1,
+      name='timestamp_utc', full_name='DatFragment.timestamp_utc', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='data', full_name='DatFragment.data', index=1,
+      number=2, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -363,7 +370,7 @@ _DATFRAGMENT = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=610,
-  serialized_end=637,
+  serialized_end=660,
 )
 
 _REQUEST.fields_by_name['ping'].message_type = _PINGREQUEST
@@ -458,8 +465,8 @@ _COMMUNICATIONSERVICE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=639,
-  serialized_end=700,
+  serialized_start=662,
+  serialized_end=723,
   methods=[
   _descriptor.MethodDescriptor(
     name='MessageHandler',

@@ -8,6 +8,8 @@ from concurrent import futures
 
 import data_server
 
+import zmq
+
 def run(host, port):
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
   ds = data_server.DataServer()
