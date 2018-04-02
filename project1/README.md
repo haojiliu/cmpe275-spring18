@@ -2,7 +2,7 @@
 
 RFC: Climate Facts Big Data Storage and Query Pipeline
 
-## OUTDATED on some part, web is replaced with grpc, need update!!!!!!!!!
+## TODO: stream the query result in grpc, and implement leader election among grpc or db nodes
 
 ## Business Goal:
 
