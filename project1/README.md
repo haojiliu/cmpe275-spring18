@@ -2,6 +2,8 @@
 
 RFC: Climate Facts Big Data Storage and Query Pipeline
 
+## TODO: stream the query result in grpc, and implement leader election among grpc or db nodes
+
 ## Business Goal:
 
 A weather data service for user to:
@@ -35,7 +37,7 @@ https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
 #### get
 * endpoint: /data/read/v1
 * method: GET
-* available query parameters: 
+* available query parameters:
 ..* from_timestamp
 ..* to_timestamp
 ..* location
@@ -102,16 +104,13 @@ http://zguide.zeromq.org/py:msgqueue
 
 ### Write, pub-sub where web server publishes, all db nodes subscribe
 
-### sqlite db schema
+### sqlite db schema for task scheduler to store all the nodes
 ```
-CREATE TABLE etl_jobs (
-    [jobId] INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+CREATE TABLE nodes (
+    [ip_addr] text PRIMARY KEY NOT NULL,
     [flags] integer,
     [created_at] text,
-    [updated_at] text,
-    [status] integer,
-    [client_ip] VARCHAR(160)  NOT NULL,
-    [file_path] VARCHAR(160)  NOT NULL);
+    [updated_at] text)
 ```
 ### sample usage:
 ```

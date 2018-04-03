@@ -1,6 +1,7 @@
 # Haoji Liu
 import sys
 import time
+import datetime
 import threading
 
 import zmq
@@ -20,6 +21,7 @@ def connect_read_port(context):
       constants.zmq_read_host, constants.read_worker_port)
   print('read addr is %s' % connect_string)
   read_sock.connect(connect_string)
+  time.sleep(1)
   return read_sock
 
 def connect_write_port(context):
@@ -27,9 +29,10 @@ def connect_write_port(context):
   write_sock = context.socket(zmq.SUB)
   connect_string = 'tcp://{}:{}'.format(
       constants.zmq_write_host, constants.write_port)
-  print('write addr is %s' % connect_string)
   write_sock.connect(connect_string)
   write_sock.setsockopt(zmq.SUBSCRIBE, b"")
+  time.sleep(1)
+  print('write addr is %s' % connect_string)
   return write_sock
 
 def read(sock):
@@ -55,17 +58,26 @@ def write(sock):
   while True:
     print('waiting for write requests...')
     data = sock.recv_json()
-    raw = data.get('station', 'placeholder write data from db node itself...')
-    print('Going to write the following station to the db node: %s' % raw)
-    # db.data.insert({
-    #     "station": // station name
-    #     "timestamp_utc": // the weather data were gathered at
-    #     "raw": // all columns except the station column
-    #     "created_at_utc": // this row is inserted at
-    #   })
-    print(data)
-    _write(data)
-    time.sleep(3)
+    ts = time.time()
+    current_timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
+    raw = data.get('raw', 'placeholder write data from db node itself...')
+    timestamp_utc = data['timestamp_utc']
+    for line in raw.splitlines():
+      print('Going to write the following station to the db node: %s' % line)
+      # db.data.insert({
+      #     "station": // station name
+      #     "timestamp_utc": // the weather data were gathered at
+      #     "raw": // all columns except the station column
+      #     "created_at_utc": // this row is inserted at
+      #   })
+
+      _write({
+        'station': 'ACT',
+        'timestamp_utc': timestamp_utc,
+        'raw': line,
+        'created_at_utc': current_timestamp
+      })
 
 def main():
   # TODO: implement a retry context manager
@@ -74,7 +86,6 @@ def main():
     context = zmq.Context()
     read_sock = connect_read_port(context)
     write_sock = connect_write_port(context)
-
     write_thread = threading.Thread(target=write, args=(write_sock,))
     write_thread.daemon = True
     write_thread.start()

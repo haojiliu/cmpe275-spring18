@@ -1,1 +1,1 @@
-5 * * * * root python3 monitor_node_health.py
+5 * * * * root python3 /srv/src/monitor_node_health.py > /var/log/cron.log
