@@ -8,4 +8,6 @@ RUN mkdir /srv/logs
 
 EXPOSE 3000 8081
 
-CMD python3 /tmp/heartbeat.py
+COPY ./src/run.sh /tmp/run.sh
+RUN chmod +x /tmp/run.sh
+CMD /tmp/run.sh

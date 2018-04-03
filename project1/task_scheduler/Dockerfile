@@ -14,8 +14,9 @@ EXPOSE 443 9002 5559 5560 80
 ADD ./config/supervisord.conf /etc/supervisord.conf
 
 # add cron job
-ADD ./config/crontab /etc/cron.d/node-monitor-cron
-RUN chmod 0644 /etc/cron.d/node-monitor-cron
+ADD ./config/add_cron.sh /tmp/add_cron.sh
+RUN chmod +x /tmp/add_cron.sh
+RUN /tmp/add_cron.sh
 RUN touch /var/log/cron.log
 
 CMD /usr/bin/supervisord -c /etc/supervisord.conf

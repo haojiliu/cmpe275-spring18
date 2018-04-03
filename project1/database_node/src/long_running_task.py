@@ -7,6 +7,7 @@ import threading
 import zmq
 
 import constants
+import util
 
 from pymongo import MongoClient
 client = MongoClient()
@@ -14,11 +15,14 @@ client = MongoClient('localhost', 27017)
 db = client.main_db
 weather_data = db['weather_data']
 
+read_host = util.try_get_ip(constants.zmq_read_host)
+write_host = util.try_get_ip(constants.zmq_write_host)
+
 def connect_read_port(context):
   # to get read requests
   read_sock = context.socket(zmq.REP)
   connect_string = 'tcp://{}:{}'.format(
-      constants.zmq_read_host, constants.read_worker_port)
+      read_host, constants.read_worker_port)
   print('read addr is %s' % connect_string)
   read_sock.connect(connect_string)
   time.sleep(1)
@@ -28,7 +32,7 @@ def connect_write_port(context):
   # to get write requests
   write_sock = context.socket(zmq.SUB)
   connect_string = 'tcp://{}:{}'.format(
-      constants.zmq_write_host, constants.write_port)
+      write_host, constants.write_port)
   write_sock.connect(connect_string)
   write_sock.setsockopt(zmq.SUBSCRIBE, b"")
   time.sleep(1)

@@ -14,5 +14,3 @@ RUN pip install --upgrade pip
 RUN pip3 install --upgrade pip
 RUN pip install -r /srv/config/requirements.txt
 RUN pip3 install -r /srv/config/requirements-python3.txt
-
-COPY ./heartbeat.py /tmp/heartbeat.py

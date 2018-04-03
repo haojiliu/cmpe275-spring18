@@ -17,14 +17,18 @@ _log = logging.getLogger(__name__)
 # _log.addHandler(ch)
 
 import zmq
-import constants
+import constants, util
 
 zmq_context = zmq.Context()
+
+write_host = util.try_get_ip(constants.zmq_write_host)
+read_host = util.try_get_ip(constants.zmq_read_host)
+
 write_connect_string = 'tcp://{}:{}'.format(
-    constants.zmq_write_host, constants.write_port)
+    write_host, constants.write_port)
 
 read_connect_string = 'tcp://{}:{}'.format(
-    constants.zmq_read_host, constants.read_client_port)
+    read_host, constants.read_client_port)
 
 def get_write_socket():
   write_sock = zmq_context.socket(zmq.PUB)
