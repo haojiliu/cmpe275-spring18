@@ -27,8 +27,6 @@ def preprocess(fpath):
         buffer.append(line)
       cnt = cnt - 1
 
-
-
 class Client():
   def __init__(self, host='0.0.0.0', port=3000):
     self.channel = grpc.insecure_channel('%s:%d' % (host, port))

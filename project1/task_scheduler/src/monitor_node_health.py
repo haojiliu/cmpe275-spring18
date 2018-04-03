@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from datetime import datetime, timedelta
 # sqlite connection
 import sqlite3
@@ -20,6 +22,9 @@ def check_health():
     diff = datetime.now() - last_updated_time
     print(diff)
     if diff > timedelta(seconds=constants.MIN_HEARTBEAT_INTERVAL * 2):
+      q = "update nodes set flags = 1 where ip_addr == %s" % job[0]
+      print(q)
+      c.execute(q)
       print('find a bad node! %s' % str(job))
       # TODO: use sqlalchemy
       report(job)
