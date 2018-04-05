@@ -14,8 +14,18 @@ class CommunicationServiceStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.MessageHandler = channel.unary_unary(
-        '/CommunicationService/MessageHandler',
+    self.PutHandler = channel.stream_unary(
+        '/CommunicationService/PutHandler',
+        request_serializer=data__pb2.Request.SerializeToString,
+        response_deserializer=data__pb2.Response.FromString,
+        )
+    self.GetHandler = channel.unary_stream(
+        '/CommunicationService/GetHandler',
+        request_serializer=data__pb2.Request.SerializeToString,
+        response_deserializer=data__pb2.Response.FromString,
+        )
+    self.Ping = channel.unary_unary(
+        '/CommunicationService/Ping',
         request_serializer=data__pb2.Request.SerializeToString,
         response_deserializer=data__pb2.Response.FromString,
         )
@@ -25,7 +35,21 @@ class CommunicationServiceServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
-  def MessageHandler(self, request, context):
+  def PutHandler(self, request_iterator, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetHandler(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def Ping(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -35,8 +59,18 @@ class CommunicationServiceServicer(object):
 
 def add_CommunicationServiceServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'MessageHandler': grpc.unary_unary_rpc_method_handler(
-          servicer.MessageHandler,
+      'PutHandler': grpc.stream_unary_rpc_method_handler(
+          servicer.PutHandler,
+          request_deserializer=data__pb2.Request.FromString,
+          response_serializer=data__pb2.Response.SerializeToString,
+      ),
+      'GetHandler': grpc.unary_stream_rpc_method_handler(
+          servicer.GetHandler,
+          request_deserializer=data__pb2.Request.FromString,
+          response_serializer=data__pb2.Response.SerializeToString,
+      ),
+      'Ping': grpc.unary_unary_rpc_method_handler(
+          servicer.Ping,
           request_deserializer=data__pb2.Request.FromString,
           response_serializer=data__pb2.Response.SerializeToString,
       ),

@@ -12,3 +12,9 @@ read_client_port = 5559
 read_worker_port = 5560
 
 DB_FILE_PATH = '/srv/tmp.db'
+
+EMAILER_SENDER = 'cmpe275server@gmail.com'
+EMAILER_SENDER_PASSWD = 'donghaosu'
+EMAILER_RECIPIENTS = ['haoji.liu@sjsu.edu','donghao.su@sjsu.edu']
+EMAILER_NODE_ERROR_SUBJECT = 'cmpe275 project 1 node failure'
+EMAILER_NODE_ERROR_BODY = 'Your node goes bad, please check.'

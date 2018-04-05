@@ -98,14 +98,15 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
   # def __init__(self, read_sock, write_sock):
   #   self.read_sock = read_sock
   #   self.write_sock = write_sock
-  def PutHandler(self, request, context):
-    assert request.putRequest.metaData.uuid is not None
+  def PutHandler(self, request_iterator, context):
     print('this is a put request')
-    payload = {'raw': request.putRequest.datFragment.data.decode(),
-            'timestamp_utc': request.putRequest.datFragment.timestamp_utc}
-    write(payload)
+    for request in request_iterator:
+      assert request.putRequest.metaData.uuid is not None
+      payload = {'raw': request.putRequest.datFragment.data.decode(),
+              'timestamp_utc': request.putRequest.datFragment.timestamp_utc}
+      write(payload)
     return data_pb2.Response(
-      isSuccess=True,
+      code=data_pb2.StatusCode.Value('Ok'),
       msg="put data successfully the grpc server!")
 
   def GetHandler(self, request, context):
@@ -117,13 +118,14 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
     }
     resp = try_read(params)
     datFrag = resp_to_byte_string(resp)
-    return data_pb2.Response(
-      isSuccess=True,
-      msg="get data successfully the grpc server!",
-      datFragment=data_pb2.DatFragment(data=datFrag))
+    for data in [datFrag,]:
+      yield data_pb2.Response(
+        code=data_pb2.StatusCode.Value('Ok'),
+        msg="get data successfully the grpc server!",
+        datFragment=data_pb2.DatFragment(data=data))
 
   def Ping(self, request, context):
     print('this is a ping request')
     return data_pb2.Response(
-      isSuccess=True,
+      code=data_pb2.StatusCode.Value('Ok'),
       msg="pinged successfully the grpc server!")

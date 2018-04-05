@@ -24,7 +24,7 @@ services:
     build: ./grpc_server
     container_name: cmpe275_grpc
     ports:
-      - "3000:3000" # for local to make grpc call to container
+      - "8080:8080" # for local to make grpc call to container
     tty: true
   db:
     volumes:
