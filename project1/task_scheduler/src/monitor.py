@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # Haoji liu
+import logging
+
 from flask import Flask
 from node import Node
 import constants
@@ -14,13 +16,13 @@ def index():
 
 @app.route('/register/<node_ip>', methods=['GET'])
 def register(node_ip):
-  print('yessss a node trying to register!!!!')
+  logging.warning('yessss a node trying to register!!!!')
   if Node.create(node_ip):
     return 'success'
 
 @app.route('/ping/<node_ip>', methods=['GET'])
 def ping(node_ip):
-  print('yessss a node trying to ping!!!!')
+  logging.warning('yessss a node trying to ping!!!!')
   if Node.touch(node_ip):
     return 'success'
 

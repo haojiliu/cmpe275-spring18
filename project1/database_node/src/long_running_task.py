@@ -3,6 +3,7 @@ import sys
 import time
 import datetime
 import threading
+import logging
 
 import zmq
 
@@ -14,7 +15,7 @@ client = MongoClient()
 client = MongoClient('localhost', 27017)
 db = client.main_db
 weather_data = db['weather_data']
-
+# weather_data.remove({})
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
 
@@ -23,7 +24,7 @@ def connect_read_port(context):
   read_sock = context.socket(zmq.REP)
   connect_string = 'tcp://{}:{}'.format(
       read_host, constants.read_worker_port)
-  print('read addr is %s' % connect_string)
+  logging.warning('read addr is %s' % connect_string)
   read_sock.connect(connect_string)
   time.sleep(1)
   return read_sock
@@ -36,31 +37,47 @@ def connect_write_port(context):
   write_sock.connect(connect_string)
   write_sock.setsockopt(zmq.SUBSCRIBE, b"")
   time.sleep(1)
-  print('write addr is %s' % connect_string)
+  logging.warning('write addr is %s' % connect_string)
   return write_sock
+
+def serialize(doc):
+  """convert mongodb bson doc into a string
+
+  Returns byte string
+  """
+  logging.warning(doc)
+  return ' '.join([doc['timestamp_utc'], doc['raw']]).encode()
 
 def read(sock):
   while True:
-    print('waiting for read requests...')
-    data =sock.recv_json()
-    print(data)
-    # TODO: filter by time period instead of returning all
+    logging.warning('waiting for read requests...')
+    params =sock.recv_json()
+    logging.warning(params)
     cursor = weather_data.find({})
-    resp = [doc['station'] for doc in cursor]
-    print(resp)
+    parts = [serialize(doc) for doc in cursor]
     # resp = mydb.mytable.find({"date": {"$lt": datetime.datetime(2015, 12, 1)}}).sort("author")
-    sock.send_json({
-      'raw': resp
-    })
+    logging.warning('sending reading results back... %s' % str(parts))
+    # TODO: sending in chunks of lines, not line by line
+    sock.send_multipart(parts)
+    #for part in parts:
+    # sock.send(parts[0].encode())
     time.sleep(3)
 
 def _write(data_dict):
   weather_data.insert_one(data_dict)
 
+def sanitize(line):
+  """remove extra spaces, tabs, trailing/leading spaces, etc."""
+  return line.strip()
+
+def deserialize(line):
+  station = line.split(' ')[0]
+  return {'station': station, 'raw': line}
+
 def write(sock):
   """Each message received will be one entry in the db"""
   while True:
-    print('waiting for write requests...')
+    logging.warning('waiting for write requests...')
     data = sock.recv_json()
     ts = time.time()
     current_timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
@@ -68,20 +85,19 @@ def write(sock):
     raw = data.get('raw', 'placeholder write data from db node itself...')
     timestamp_utc = data['timestamp_utc']
     for line in raw.splitlines():
-      print('Going to write the following station to the db node: %s' % line)
+      logging.warning('Going to write the following station to the db node: %s' % line)
+      line = sanitize(line)
+      logging.warning('Going to write the following station to the db node: %s' % line)
       # db.data.insert({
       #     "station": // station name
       #     "timestamp_utc": // the weather data were gathered at
       #     "raw": // all columns except the station column
       #     "created_at_utc": // this row is inserted at
       #   })
-
-      _write({
-        'station': 'ACT',
-        'timestamp_utc': timestamp_utc,
-        'raw': line,
-        'created_at_utc': current_timestamp
-      })
+      d = deserialize(line)
+      d['timestamp_utc'] = timestamp_utc
+      d['created_at_utc'] = current_timestamp
+      _write(d)
 
 def main():
   # TODO: implement a retry context manager
@@ -101,7 +117,7 @@ def main():
     read_thread.join()
     write_thread.join()
   except Exception as e:
-    print(e)
+    logging.warning(e)
   finally:
     read_sock.close()
     write_sock.close()

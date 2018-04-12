@@ -53,17 +53,19 @@ def get_read_socket():
 
 def read(sock, params):
   # TODO: add more params like table name, target station
+  print('trying to send a req to read socket...')
+  print(sock)
   sock.send_json(params)
   # wait for response
-  resp = sock.recv_json()
-  return resp
+  print('waiting for read response...')
+  return sock.recv_multipart()
 
 def try_read(params):
   read_client_sock = None
   try:
     read_client_sock = get_read_socket()
-    resp = read(read_client_sock, params)
-    return resp
+    for r in read(read_client_sock, params):
+      yield r
   except Exception as e:
     print(e)
     return {'msg': 'something wrong with read...'}
@@ -91,9 +93,6 @@ def write(payload):
 
   return True
 
-def resp_to_byte_string(resp):
-  return '\n'.join(resp.get('raw', 'something wrong...')).encode()
-
 class DataServer(data_pb2_grpc.CommunicationServiceServicer):
   # def __init__(self, read_sock, write_sock):
   #   self.read_sock = read_sock
@@ -111,18 +110,16 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
 
   def GetHandler(self, request, context):
     assert request.getRequest.metaData.uuid is not None
-    print('this is a get request')
     params = {
       'from_utc': request.getRequest.queryParams.from_utc,
       'to_utc': request.getRequest.queryParams.to_utc,
     }
-    resp = try_read(params)
-    datFrag = resp_to_byte_string(resp)
-    for data in [datFrag,]:
+    print('this is a get request with params %s' % str(params))
+    for datFrag in try_read(params):
       yield data_pb2.Response(
         code=data_pb2.StatusCode.Value('Ok'),
         msg="get data successfully the grpc server!",
-        datFragment=data_pb2.DatFragment(data=data))
+        datFragment=data_pb2.DatFragment(data=datFrag))
 
   def Ping(self, request, context):
     print('this is a ping request')

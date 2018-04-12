@@ -2,7 +2,11 @@
 
 RFC: Climate Facts Big Data Storage and Query Pipeline
 
-## TODO: stream the query result in grpc, and implement leader election among grpc or db nodes
+## TODO: implement some sort of Raft
+## TODO: retry socket connection when something fail
+## TODO: retry node register when something fail
+## TODO: log pipeline; pipe to some file
+## TODO:
 
 ## Business Goal:
 

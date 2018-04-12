@@ -1,7 +1,7 @@
 # Haoji Liu
 # This is the grpc client, that will read a data file, chunk it into several messages, and send it to grpc server
 # Haoji Liu
-import uuid
+import uuid, time
 import grpc
 import data_pb2_grpc
 from data_pb2 import Request, Response, PingRequest, PutRequest, GetRequest, DatFragment, MetaData, QueryParams
@@ -13,7 +13,7 @@ CONST_CHUNK_SIZE = 5  # number of lines per payload
 
 def preprocess(fpath):
   """read file and chunkify it to be small batch for grpc transport"""
-  timestamp_utc = '2017-08-08'
+  timestamp_utc = '2016-03-12 03:23:47'
   cnt = 10
   buffer = []
   with open(fpath) as f:
