@@ -76,6 +76,16 @@ def try_read(params):
       read_client_sock.disconnect(read_connect_string)
       read_client_sock.close()
 
+### TODO: should we have a separate peek socket????
+def pre_read_check():
+  # TODO: if we don't have it, send query to other clusters
+  return True
+
+def pre_write_check():
+  # TODO: if we can't handle the data, send data to other clusters
+  return True
+###
+
 def write(payload):
   write_sock = None
   try:
@@ -99,16 +109,21 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
   #   self.write_sock = write_sock
   def PutHandler(self, request_iterator, context):
     print('this is a put request')
-    for request in request_iterator:
-      assert request.putRequest.metaData.uuid is not None
-      payload = {
-        'raw': request.putRequest.datFragment.data.decode(),
-        'timestamp_utc': request.putRequest.datFragment.timestamp_utc,
-        'uuid': request.putRequest.metaData.uuid}
-      write(payload)
-    return data_pb2.Response(
-      code=data_pb2.StatusCode.Value('Ok'),
-      msg="put data successfully the grpc server!")
+    if pre_write_check():
+      for request in request_iterator:
+        assert request.putRequest.metaData.uuid is not None
+        payload = {
+          'raw': request.putRequest.datFragment.data.decode(),
+          'timestamp_utc': request.putRequest.datFragment.timestamp_utc,
+          'uuid': request.putRequest.metaData.uuid}
+        write(payload)
+      return data_pb2.Response(
+        code=data_pb2.StatusCode.Value('Ok'),
+        msg="put data successfully the grpc server!")
+    else:
+      return data_pb2.Response(
+        code=data_pb2.StatusCode.Value('Failed'),
+        msg="this node is full")
 
   def GetHandler(self, request, context):
     assert request.getRequest.metaData.uuid is not None
@@ -117,11 +132,16 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
       'to_utc': request.getRequest.queryParams.to_utc,
     }
     print('this is a get request with params %s' % str(params))
-    for datFrag in try_read(params):
+    if pre_read_check(params):
+      for datFrag in try_read(params):
+        yield data_pb2.Response(
+          code=data_pb2.StatusCode.Value('Ok'),
+          msg="get data successfully from the grpc server!",
+          datFragment=data_pb2.DatFragment(data=datFrag))
+    else:
       yield data_pb2.Response(
-        code=data_pb2.StatusCode.Value('Ok'),
-        msg="get data successfully the grpc server!",
-        datFragment=data_pb2.DatFragment(data=datFrag))
+        code=data_pb2.StatusCode.Value('Failed'),
+        msg="We don't have it!")
 
   def Ping(self, request, context):
     print('this is a ping request')

@@ -19,6 +19,31 @@ weather_data = db['weather_data']
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
 
+# SCHEMA:
+# db.data.insert({
+#     "uuid": // defined by the grpc client
+#     "station": // station name
+#     "timestamp_utc": // the weather data were gathered at
+#     "raw": // all columns except the station column
+#     "created_at_utc": // this row is inserted at
+#   })
+
+def is_disk_full():
+  """reroute to other clusters if disk full here"""
+  return False
+
+def get_cursor(params):
+  from_utc = params['from_utc']
+  to_utc = params['to_utc']
+
+  cursor = weather_data.find({
+    timestamp_utc: {
+        $gte: ISODate(from_utc),
+        $lt: ISODate(to_utc)
+    }
+  })
+  return cursor
+
 def connect_read_port(context):
   # to get read requests
   read_sock = context.socket(zmq.REP)
@@ -53,14 +78,12 @@ def read(sock):
     logging.warning('waiting for read requests...')
     params =sock.recv_json()
     logging.warning(params)
-    cursor = weather_data.find({})
+    cursor = get_cursor(params)
     parts = [serialize(doc) for doc in cursor]
-    # resp = mydb.mytable.find({"date": {"$lt": datetime.datetime(2015, 12, 1)}}).sort("author")
     logging.warning('sending reading results back... %s' % str(parts))
     # TODO: sending in chunks of lines, not line by line
     sock.send_multipart(parts)
-    #for part in parts:
-    # sock.send(parts[0].encode())
+    # TODO: do we really need to sleep here???
     time.sleep(3)
 
 def _write(data_dict):
@@ -89,12 +112,6 @@ def write(sock):
       logging.warning('Going to write the following station to the db node: %s' % line)
       line = sanitize(line)
       logging.warning('Going to write the following station to the db node: %s' % line)
-      # db.data.insert({
-      #     "station": // station name
-      #     "timestamp_utc": // the weather data were gathered at
-      #     "raw": // all columns except the station column
-      #     "created_at_utc": // this row is inserted at
-      #   })
       d = deserialize(line)
       d['timestamp_utc'] = timestamp_utc
       d['created_at_utc'] = current_timestamp

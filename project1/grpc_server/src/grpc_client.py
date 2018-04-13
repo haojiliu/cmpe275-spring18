@@ -2,6 +2,7 @@
 # This is the grpc client, that will read a data file, chunk it into several messages, and send it to grpc server
 # Haoji Liu
 import uuid, time, argparse
+import requests
 import grpc
 import data_pb2_grpc
 from data_pb2 import Request, Response, PingRequest, PutRequest, GetRequest, DatFragment, MetaData, QueryParams
@@ -10,6 +11,19 @@ CONST_MEDIA_TYPE_TEXT = 1
 
 # Looks like 1KB is a good chunk size
 CONST_CHUNK_SIZE = 10  # number of lines per payload
+
+# TODO: move to elsewhere
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    my_ip = socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15].encode())
+    )[20:24])
+    return my_ip
+
+nodes = requests.get('https://cmpe275-spring-18.mybluemix.net/get').split(',')
+my_ip = get_ip_address('eth0')
 
 def preprocess(fpath):
   """read file and chunkify it to be small batch for grpc transport
@@ -52,20 +66,33 @@ class Client():
     self.receiver = host
 
   def ping(self, msg):
+    """
+    Returns: bool
+    """
     req = Request(
       fromSender=self.sender,
       toReceiver=self.receiver,
       ping=PingRequest(msg=msg))
     resp = self.stub.Ping(req)
-    return resp.msg
-
-  def put(self, fpath):
-    req_iterator = put_req_iterator(fpath, self.sender, self.receiver)
-    resp = self.stub.PutHandler(req_iterator)
     print(resp.msg)
     return True
 
+  def put(self, fpath):
+    """
+    Returns: bool
+    """
+    req_iterator = put_req_iterator(fpath, self.sender, self.receiver)
+    resp = self.stub.PutHandler(req_iterator)
+    print(resp.msg)
+      if resp.code == 2:
+        print('write failed at this node!')
+        return False
+    return True
+
   def get(self, from_utc, to_utc):
+    """
+    Returns: bool
+    """
     req = Request(
       fromSender=self.sender,
       toReceiver=self.receiver,
@@ -74,7 +101,13 @@ class Client():
           queryParams=QueryParams(from_utc=from_utc,to_utc=to_utc))
       )
     for resp in self.stub.GetHandler(req):
-      print(resp.datFragment.data)
+      if resp.code == 2:
+        print('read failed at this node!')
+        return False
+      else:
+        print(resp.datFragment.data)
+
+    return True
 
 def main():
   """
@@ -106,21 +139,37 @@ def main():
     port = args.port
     assert host
     assert port
-    client = Client(host, port, 'some sender')
+    client = Client(host, port, my_ip)
     if args.get:
       assert args.range
       from_utc, to_utc = args.range[0], args.range[1]
       assert from_utc
       assert to_utc
-      client.get(from_utc=from_utc, to_utc=to_utc)
+      if not client.get(from_utc=from_utc, to_utc=to_utc):
+        for node in nodes:
+          client = Client(node, port, host)
+          if client.get(from_utc=from_utc, to_utc=to_utc):
+            print('get succeeded at one of the other nodes')
+            break
+        print('get failed at all other nodes')
+      else:
+        print('get succeeded at this node')
 
     elif args.upload:
       fp = args.file
       assert fp
-      client.put(fpath=fp)
+      if not client.put(fpath=fp):
+        for node in nodes:
+          client = Client(node, port, host)
+          if client.put(fpath=fp):
+            print('put succeeded at one of the other nodes')
+            break
+        print('put failed at all other nodes')
+      else:
+        print('put succeeded at this node')
 
     elif args.ping:
-      print(client.ping(msg=args.message))
+      client.ping(msg=args.message)
   except Exception as e:
     print(e)
     parser.print_help()
