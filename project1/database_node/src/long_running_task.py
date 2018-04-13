@@ -1,5 +1,5 @@
 # Haoji Liu
-import sys
+import sys, os
 import time
 import datetime
 import threading
@@ -19,6 +19,8 @@ weather_data = db['weather_data']
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
 
+CONST_DB_LOWER_BOUND = 25 * 1024 * 4096 # 100 MB
+
 # SCHEMA:
 # db.data.insert({
 #     "uuid": // defined by the grpc client
@@ -29,10 +31,15 @@ write_host = util.try_get_ip(constants.zmq_write_host)
 #   })
 
 def is_disk_full():
-  """reroute to other clusters if disk full here"""
-  return False
+  """reroute to other clusters if disk full here
+  Returns: True if disk full
+  """
+  return os.statvfs('/data/db').f_bavail < CONST_DB_LOWER_BOUND
 
 def get_cursor(params):
+  """
+  Returns: mongodb cursor object
+  """
   from_utc = params['from_utc']
   to_utc = params['to_utc']
 
