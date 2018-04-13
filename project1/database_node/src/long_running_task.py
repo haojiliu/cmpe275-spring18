@@ -84,6 +84,7 @@ def write(sock):
 
     raw = data.get('raw', 'placeholder write data from db node itself...')
     timestamp_utc = data['timestamp_utc']
+    uuid = data['uuid']
     for line in raw.splitlines():
       logging.warning('Going to write the following station to the db node: %s' % line)
       line = sanitize(line)
@@ -97,6 +98,7 @@ def write(sock):
       d = deserialize(line)
       d['timestamp_utc'] = timestamp_utc
       d['created_at_utc'] = current_timestamp
+      d['uuid'] = uuid
       _write(d)
 
 def main():

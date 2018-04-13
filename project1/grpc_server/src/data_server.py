@@ -101,8 +101,10 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
     print('this is a put request')
     for request in request_iterator:
       assert request.putRequest.metaData.uuid is not None
-      payload = {'raw': request.putRequest.datFragment.data.decode(),
-              'timestamp_utc': request.putRequest.datFragment.timestamp_utc}
+      payload = {
+        'raw': request.putRequest.datFragment.data.decode(),
+        'timestamp_utc': request.putRequest.datFragment.timestamp_utc,
+        'uuid': request.putRequest.metaData.uuid}
       write(payload)
     return data_pb2.Response(
       code=data_pb2.StatusCode.Value('Ok'),
