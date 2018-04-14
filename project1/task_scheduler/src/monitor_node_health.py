@@ -1,26 +1,39 @@
+#!/usr/bin/python
+import time, logging
 from datetime import datetime, timedelta
 # sqlite connection
 import sqlite3
 
-import constants
+import constants, emailer
 
 def report(job):
-  # report error on a given node
-  print('going to report the node!!!')
+  # TODO: report error on a given node
+  # for now it will just send an email
+  logging.warning('going to report the node!!!')
+  return True
+  emailer.send(constants.EMAILER_SENDER,
+    constants.EMAILER_SENDER_PASSWD,
+    constants.EMAILER_RECIPIENTS,
+    constants.EMAILER_NODE_ERROR_SUBJECT,
+    constants.EMAILER_NODE_ERROR_BODY)
+
   return True
 
 def check_health():
   conn = sqlite3.connect('/srv/tmp.db')
-  print(conn)
+  logging.warning('checking nodes health... %s' % str(conn))
   c = conn.cursor()
 
   for job in c.execute('select * from nodes;'):
-    print(job)
+    logging.warning(job)
     last_updated_time = datetime.strptime(job[3], '%Y-%m-%d %H:%M:%S.%f')
     diff = datetime.now() - last_updated_time
-    print(diff)
+    logging.warning(diff)
     if diff > timedelta(seconds=constants.MIN_HEARTBEAT_INTERVAL * 2):
-      print('find a bad node! %s' % str(job))
+      q = "update nodes set flags = 1 where ip_addr == %s" % job[0]
+      logging.warning(q)
+      c.execute(q)
+      logging.warning('find a bad node! %s' % str(job))
       # TODO: use sqlalchemy
       report(job)
       # job.flags = constants.CONST_NODE_FLAG_DEAD
@@ -30,5 +43,6 @@ def check_health():
   conn.close()
   return True
 
-if __name__ == '__main__':
+while True:
+  time.sleep(5)
   check_health()

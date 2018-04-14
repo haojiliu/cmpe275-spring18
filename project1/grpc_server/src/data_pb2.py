@@ -3,6 +3,7 @@
 
 import sys
 _b=sys.version_info[0]<3 and (lambda x:x) or (lambda x:x.encode('latin1'))
+from google.protobuf.internal import enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
@@ -19,9 +20,39 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='data.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\ndata.proto\"\xb8\x01\n\x07Request\x12\x12\n\nfromSender\x18\x01 \x01(\t\x12\x12\n\ntoReceiver\x18\x02 \x01(\t\x12\x16\n\x0eoriginalSender\x18\x03 \x01(\t\x12\x1c\n\x04ping\x18\x06 \x01(\x0b\x32\x0c.PingRequestH\x00\x12!\n\nputRequest\x18\x07 \x01(\x0b\x32\x0b.PutRequestH\x00\x12!\n\ngetRequest\x18\x08 \x01(\x0b\x32\x0b.GetRequestH\x00\x42\t\n\x07payload\"j\n\x08Response\x12\x11\n\tisSuccess\x18\x01 \x01(\x08\x12\x0b\n\x03msg\x18\x02 \x01(\t\x12\x1b\n\x08metaData\x18\x03 \x01(\x0b\x32\t.MetaData\x12!\n\x0b\x64\x61tFragment\x18\x04 \x01(\x0b\x32\x0c.DatFragment\"\x1a\n\x0bPingRequest\x12\x0b\n\x03msg\x18\x01 \x01(\t\"L\n\nPutRequest\x12\x1b\n\x08metaData\x18\x01 \x01(\x0b\x32\t.MetaData\x12!\n\x0b\x64\x61tFragment\x18\x02 \x01(\x0b\x32\x0c.DatFragment\"L\n\nGetRequest\x12\x1b\n\x08metaData\x18\x01 \x01(\x0b\x32\t.MetaData\x12!\n\x0bqueryParams\x18\x02 \x01(\x0b\x32\x0c.QueryParams\"/\n\x0bQueryParams\x12\x10\n\x08\x66rom_utc\x18\x01 \x01(\t\x12\x0e\n\x06to_utc\x18\x02 \x01(\t\"B\n\x08MetaData\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x15\n\rnumOfFragment\x18\x02 \x01(\x05\x12\x11\n\tmediaType\x18\x03 \x01(\x05\"2\n\x0b\x44\x61tFragment\x12\x15\n\rtimestamp_utc\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\x32=\n\x14\x43ommunicationService\x12%\n\x0eMessageHandler\x12\x08.Request\x1a\t.Responseb\x06proto3')
+  serialized_pb=_b('\n\ndata.proto\"\xb8\x01\n\x07Request\x12\x12\n\nfromSender\x18\x01 \x01(\t\x12\x12\n\ntoReceiver\x18\x02 \x01(\t\x12\x16\n\x0eoriginalSender\x18\x03 \x01(\t\x12\x1c\n\x04ping\x18\x06 \x01(\x0b\x32\x0c.PingRequestH\x00\x12!\n\nputRequest\x18\x07 \x01(\x0b\x32\x0b.PutRequestH\x00\x12!\n\ngetRequest\x18\x08 \x01(\x0b\x32\x0b.GetRequestH\x00\x42\t\n\x07payload\"r\n\x08Response\x12\x19\n\x04\x63ode\x18\x01 \x01(\x0e\x32\x0b.StatusCode\x12\x0b\n\x03msg\x18\x02 \x01(\t\x12\x1b\n\x08metaData\x18\x03 \x01(\x0b\x32\t.MetaData\x12!\n\x0b\x64\x61tFragment\x18\x04 \x01(\x0b\x32\x0c.DatFragment\"\x1a\n\x0bPingRequest\x12\x0b\n\x03msg\x18\x01 \x01(\t\"L\n\nPutRequest\x12\x1b\n\x08metaData\x18\x01 \x01(\x0b\x32\t.MetaData\x12!\n\x0b\x64\x61tFragment\x18\x02 \x01(\x0b\x32\x0c.DatFragment\"L\n\nGetRequest\x12\x1b\n\x08metaData\x18\x01 \x01(\x0b\x32\t.MetaData\x12!\n\x0bqueryParams\x18\x02 \x01(\x0b\x32\x0c.QueryParams\"/\n\x0bQueryParams\x12\x10\n\x08\x66rom_utc\x18\x01 \x01(\t\x12\x0e\n\x06to_utc\x18\x02 \x01(\t\"B\n\x08MetaData\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x15\n\rnumOfFragment\x18\x02 \x01(\x05\x12\x11\n\tmediaType\x18\x03 \x01(\x05\"2\n\x0b\x44\x61tFragment\x12\x15\n\rtimestamp_utc\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c*-\n\nStatusCode\x12\x0b\n\x07Unknown\x10\x00\x12\x06\n\x02Ok\x10\x01\x12\n\n\x06\x46\x61iled\x10\x02\x32}\n\x14\x43ommunicationService\x12#\n\nPutHandler\x12\x08.Request\x1a\t.Response(\x01\x12#\n\nGetHandler\x12\x08.Request\x1a\t.Response0\x01\x12\x1b\n\x04Ping\x12\x08.Request\x1a\t.Responseb\x06proto3')
 )
 
+_STATUSCODE = _descriptor.EnumDescriptor(
+  name='StatusCode',
+  full_name='StatusCode',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='Unknown', index=0, number=0,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='Ok', index=1, number=1,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='Failed', index=2, number=2,
+      options=None,
+      type=None),
+  ],
+  containing_type=None,
+  options=None,
+  serialized_start=670,
+  serialized_end=715,
+)
+_sym_db.RegisterEnumDescriptor(_STATUSCODE)
+
+StatusCode = enum_type_wrapper.EnumTypeWrapper(_STATUSCODE)
+Unknown = 0
+Ok = 1
+Failed = 2
 
 
 
@@ -102,9 +133,9 @@ _RESPONSE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='isSuccess', full_name='Response.isSuccess', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
+      name='code', full_name='Response.code', index=0,
+      number=1, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
@@ -142,7 +173,7 @@ _RESPONSE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=201,
-  serialized_end=307,
+  serialized_end=315,
 )
 
 
@@ -172,8 +203,8 @@ _PINGREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=309,
-  serialized_end=335,
+  serialized_start=317,
+  serialized_end=343,
 )
 
 
@@ -210,8 +241,8 @@ _PUTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=337,
-  serialized_end=413,
+  serialized_start=345,
+  serialized_end=421,
 )
 
 
@@ -248,8 +279,8 @@ _GETREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=415,
-  serialized_end=491,
+  serialized_start=423,
+  serialized_end=499,
 )
 
 
@@ -286,8 +317,8 @@ _QUERYPARAMS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=493,
-  serialized_end=540,
+  serialized_start=501,
+  serialized_end=548,
 )
 
 
@@ -331,8 +362,8 @@ _METADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=542,
-  serialized_end=608,
+  serialized_start=550,
+  serialized_end=616,
 )
 
 
@@ -369,8 +400,8 @@ _DATFRAGMENT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=610,
-  serialized_end=660,
+  serialized_start=618,
+  serialized_end=668,
 )
 
 _REQUEST.fields_by_name['ping'].message_type = _PINGREQUEST
@@ -385,6 +416,7 @@ _REQUEST.fields_by_name['putRequest'].containing_oneof = _REQUEST.oneofs_by_name
 _REQUEST.oneofs_by_name['payload'].fields.append(
   _REQUEST.fields_by_name['getRequest'])
 _REQUEST.fields_by_name['getRequest'].containing_oneof = _REQUEST.oneofs_by_name['payload']
+_RESPONSE.fields_by_name['code'].enum_type = _STATUSCODE
 _RESPONSE.fields_by_name['metaData'].message_type = _METADATA
 _RESPONSE.fields_by_name['datFragment'].message_type = _DATFRAGMENT
 _PUTREQUEST.fields_by_name['metaData'].message_type = _METADATA
@@ -399,6 +431,7 @@ DESCRIPTOR.message_types_by_name['GetRequest'] = _GETREQUEST
 DESCRIPTOR.message_types_by_name['QueryParams'] = _QUERYPARAMS
 DESCRIPTOR.message_types_by_name['MetaData'] = _METADATA
 DESCRIPTOR.message_types_by_name['DatFragment'] = _DATFRAGMENT
+DESCRIPTOR.enum_types_by_name['StatusCode'] = _STATUSCODE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Request = _reflection.GeneratedProtocolMessageType('Request', (_message.Message,), dict(
@@ -465,13 +498,31 @@ _COMMUNICATIONSERVICE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=662,
-  serialized_end=723,
+  serialized_start=717,
+  serialized_end=842,
   methods=[
   _descriptor.MethodDescriptor(
-    name='MessageHandler',
-    full_name='CommunicationService.MessageHandler',
+    name='PutHandler',
+    full_name='CommunicationService.PutHandler',
     index=0,
+    containing_service=None,
+    input_type=_REQUEST,
+    output_type=_RESPONSE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetHandler',
+    full_name='CommunicationService.GetHandler',
+    index=1,
+    containing_service=None,
+    input_type=_REQUEST,
+    output_type=_RESPONSE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='Ping',
+    full_name='CommunicationService.Ping',
+    index=2,
     containing_service=None,
     input_type=_REQUEST,
     output_type=_RESPONSE,

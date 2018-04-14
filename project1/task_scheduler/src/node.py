@@ -1,7 +1,7 @@
 # sqlite connection
-import sqlite3
 import uuid
 from datetime import datetime
+import logging
 
 import sqlite3
 
@@ -27,12 +27,12 @@ class Node:
 
   def touch(node_ip):
     # TODO: for now we just update the timestamp for each ping
-    print(node_ip)
+    logging.warning('touching node: %s' % node_ip)
     current_timestamp = str(datetime.now())
     conn = sqlite3.connect(constants.DB_FILE_PATH)
     c = conn.cursor()
     q = "update nodes set updated_at_utc = '%s' where ip_addr == %s" % (current_timestamp, node_ip)
-    print(q)
+    logging.warning('running query: %s' % q)
     c.execute(q)
     conn.commit()
     conn.close()
@@ -51,12 +51,12 @@ class Node:
     conn = sqlite3.connect(constants.DB_FILE_PATH)
     # 1. write a job entry to local sqlite
     c = conn.cursor()
-    print('going to write the new node')
+    logging.warning('going to create the new node in db')
     # Larger example that inserts many records at a time
     entries = [(new_node.ip_addr, new_node.flags, new_node.created_at_utc, new_node.updated_at_utc),]
     c.executemany('INSERT OR IGNORE INTO nodes (ip_addr,flags,created_at_utc,updated_at_utc) VALUES (?, ?, ?, ?)', entries)
     conn.commit()
     conn.close()
-    print('successfully write the new node')
+    logging.warning('successfully write the new node')
 
     return True
