@@ -13,6 +13,7 @@ import io.grpc.StatusRuntimeException;
 // java -cp target/grpctest-1.0-SNAPSHOT-jar-with-dependencies.jar com.cmpe275.grpcComm.JavaClient
 
 public class JavaClient {
+    //const
     final static int CONST_MEDIA_TYPE_TEXT = 1;
 
     final static int CONST_CHUNK_SIZE = 10;
