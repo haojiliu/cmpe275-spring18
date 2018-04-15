@@ -5,8 +5,12 @@ RFC: Climate Facts Big Data Storage and Query Pipeline
 ## TODO: implement some sort of Raft
 ## TODO: retry socket connection when something fail
 ## TODO: retry node register when something fail
-## TODO: log pipeline; pipe to some file
-## TODO:
+## TODO: same data upload multiple times, ignore? override?
+## TODO: same data query multiple times
+## TODO: disk full on write?
+## TODO: read redirect?
+## TODO: exception handling?
+## TODO: mongodb OpLog replication?
 
 ## Business Goal:
 

@@ -4,6 +4,7 @@ import time
 import datetime
 import threading
 import logging
+import hashlib
 
 import zmq
 
@@ -20,6 +21,16 @@ mesonet = db['mesonet']
 # TODO: for test only
 mesowest.remove({})
 mesonet.remove({})
+
+# SCHEMA:
+# db.data.insert({
+#     "uuid": // defined by the grpc client
+#     "station": // station name
+#     "timestamp_utc": // the weather data were gathered at
+#     "raw": // all columns except the station column
+#     "created_at_utc": // this row is inserted at
+#   })
+
 
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
@@ -45,15 +56,6 @@ def format_timestamp_mesowest(timestamp):
 
   return '%s-%s-%s %s:%s:00' % (year, month, day, hour, minute)
 
-
-# SCHEMA:
-# db.data.insert({
-#     "uuid": // defined by the grpc client
-#     "station": // station name
-#     "timestamp_utc": // the weather data were gathered at
-#     "raw": // all columns except the station column
-#     "created_at_utc": // this row is inserted at
-#   })
 
 def is_disk_full():
   """reroute to other clusters if disk full here
@@ -129,15 +131,11 @@ def read(sock):
       logging.warning('sending reading results back... %s' % str(parts))
       sock.send_multipart(parts)
 
-
       # TODO: sending in chunks of lines, not line by line
       # TODO: do we really need to sleep here???
       time.sleep(1)
     except Exception as e:
       logging.warning(e)
-
-def _write(data_dict, target_collection):
-  target_collection.insert_one(data_dict)
 
 def sanitize(line):
   """remove extra spaces, tabs, trailing/leading spaces, etc."""
@@ -146,6 +144,16 @@ def sanitize(line):
 def deserialize(line):
   station = line.split(' ')[0]
   return {'station': station, 'raw': line}
+
+def get_hash(s):
+  return hashlib.sha224(s.encode()).hexdigest()
+
+def _write(data_dict, target_collection):
+  if not target_collection.find_one({'hash': data_dict['hash']}):
+    logging.warning('new entry, going to write to db...')
+    target_collection.insert_one(data_dict)
+  else:
+    logging.warning('existed!! ignore this write')
 
 def write(sock):
   """Each message received will be one entry in the db"""
@@ -160,21 +168,23 @@ def write(sock):
       line = sanitize(line) + '\n'
 
       # mesonet
-      timestamp_utc = data.get('timestamp_utc')
+      ts = data.get('timestamp_utc')
       target = mesonet
       # mesowest
-      logging.warning(timestamp_utc)
-      if not timestamp_utc:
+      logging.warning(ts)
+      if not ts:
         logging.warning('mesowest!!')
         target = mesowest
-        timestamp_utc = format_timestamp_mesowest(line.split()[1])
+        ts = format_timestamp_mesowest(line.split()[1])
 
-      timestamp_utc = datetime.datetime.strptime(timestamp_utc, CONST_TIMESTAMP_FMT)
+      timestamp_utc = datetime.datetime.strptime(ts, CONST_TIMESTAMP_FMT)
 
       d = deserialize(line)
       d['timestamp_utc'] = timestamp_utc
       d['created_at_utc'] = datetime.datetime.now()
       d['uuid'] = uuid
+      # to detect duplicates
+      d['hash'] = get_hash(ts + d['station'])
       logging.warning('Going to write the following station to the db node: %s' % d)
       _write(d, target)
 
