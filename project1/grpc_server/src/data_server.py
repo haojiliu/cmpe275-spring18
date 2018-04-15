@@ -58,15 +58,20 @@ def read(sock, params):
   sock.send_json(params)
   # wait for response
   print('waiting for read response...')
-  return sock.recv_multipart()
+  resp = sock.recv_multipart()
+  return resp
 
 def try_read(params):
   read_client_sock = None
   try:
     read_client_sock = get_read_socket()
-    for r in read(read_client_sock, params):
+    resp = read(read_client_sock, params)
+    print(resp)
+    for r in resp:
       yield r
+
   except Exception as e:
+    print('hahaha')
     print(e)
     return {'msg': 'something wrong with read...'}
   finally:
@@ -77,7 +82,7 @@ def try_read(params):
       read_client_sock.close()
 
 ### TODO: should we have a separate peek socket????
-def pre_read_check():
+def pre_read_check(params):
   # TODO: if we don't have it, send query to other clusters
   return True
 
@@ -114,8 +119,13 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
         assert request.putRequest.metaData.uuid is not None
         payload = {
           'raw': request.putRequest.datFragment.data.decode(),
-          'timestamp_utc': request.putRequest.datFragment.timestamp_utc,
           'uuid': request.putRequest.metaData.uuid}
+        # timestamp for mesonet only, mesowest each row has diff timestamps
+        if request.putRequest.datFragment.timestamp_utc:
+          print('mesonet!')
+          payload['timestamp_utc'] = request.putRequest.datFragment.timestamp_utc
+        else:
+          print('mesowest!')
         write(payload)
       return data_pb2.Response(
         code=data_pb2.StatusCode.Value('Ok'),
@@ -130,10 +140,12 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
     params = {
       'from_utc': request.getRequest.queryParams.from_utc,
       'to_utc': request.getRequest.queryParams.to_utc,
+      'target': 'mesowest' # default to mesowest
     }
     print('this is a get request with params %s' % str(params))
     if pre_read_check(params):
       for datFrag in try_read(params):
+        print(datFrag)
         yield data_pb2.Response(
           code=data_pb2.StatusCode.Value('Ok'),
           msg="get data successfully from the grpc server!",
