@@ -5,8 +5,12 @@ RFC: Climate Facts Big Data Storage and Query Pipeline
 ## TODO: implement some sort of Raft
 ## TODO: retry socket connection when something fail
 ## TODO: retry node register when something fail
-## TODO: log pipeline; pipe to some file
-## TODO:
+## TODO: same data upload multiple times, ignore? override?
+## TODO: same data query multiple times
+## TODO: disk full on write?
+## TODO: read redirect?
+## TODO: exception handling?
+## TODO: mongodb OpLog replication?
 
 ## Business Goal:
 
@@ -22,6 +26,12 @@ A weather data service for user to:
 
 
 ## Design:
+
+### Some Important Decisions
+* hash(<timestamp_utc>+<station_name>) - unique key for each row to avoid duplicates
+* socket connection circuit breaker pattern, retry periodically until the server is up
+* all logs are pipelined to stdout, which is then collected by supervisord
+*
 
 ### Architecture
 https://www.lucidchart.com/documents/edit/1cbc95a8-b1b8-4bd7-b40c-52ca36e420b6/0
@@ -180,6 +190,7 @@ docker-compose build --no-cache # to rebuild everything from scratch
 
 ## Security
 
+* ssh key
 * auth or limited access for a given IP range
 * password
 
@@ -191,11 +202,9 @@ docker-compose build --no-cache # to rebuild everything from scratch
 
 ## Testing:
 
-
 ## Roadmap:
 
 ## Notes
-
 
 ## Ditched ideas:
 Cassandra, no large files

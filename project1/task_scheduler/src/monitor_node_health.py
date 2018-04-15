@@ -10,7 +10,6 @@ def report(job):
   # TODO: report error on a given node
   # for now it will just send an email
   logging.warning('going to report the node!!!')
-  return True
   emailer.send(constants.EMAILER_SENDER,
     constants.EMAILER_SENDER_PASSWD,
     constants.EMAILER_RECIPIENTS,

@@ -4,14 +4,6 @@ package com.cmpe275.grpcComm;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -28,11 +20,8 @@ import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
-
-// to run this java file, use command: 
-// java -cp target/grpctest-1.0-SNAPSHOT-jar-with-dependencies.jar com.cmpe275.grpcComm.JavaClient
-
 public class JavaClient {
+	
 	final static int CONST_MEDIA_TYPE_TEXT = 1;
 
 	final static int CONST_CHUNK_SIZE = 10;
@@ -114,7 +103,7 @@ public class JavaClient {
         
         return true;
     }
-
+    
 	public static void main(String[] args) throws Exception {
 
 		//TODO: get all the nodes

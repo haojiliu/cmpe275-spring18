@@ -1,20 +1,10 @@
-import time
+import time, datetime
 import grpc
 import data_pb2
 import data_pb2_grpc
 
 import json
 import os, logging, sys
-
-######################################
-# TODO: move all the crap below to another file
-_log = logging.getLogger(__name__)
-# _log.setLevel(logging.DEBUG)
-# ch = logging.StreamHandler(sys.stdout)
-# ch.setLevel(logging.DEBUG)
-# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-# ch.setFormatter(formatter)
-# _log.addHandler(ch)
 
 import zmq
 import constants, util
@@ -29,6 +19,8 @@ write_connect_string = 'tcp://{}:{}'.format(
 
 read_connect_string = 'tcp://{}:{}'.format(
     read_host, constants.read_client_port)
+
+CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
 
 def get_write_socket():
   write_sock = zmq_context.socket(zmq.PUB)
@@ -58,14 +50,18 @@ def read(sock, params):
   sock.send_json(params)
   # wait for response
   print('waiting for read response...')
-  return sock.recv_multipart()
+  resp = sock.recv_multipart()
+  return resp
 
 def try_read(params):
   read_client_sock = None
   try:
     read_client_sock = get_read_socket()
-    for r in read(read_client_sock, params):
+    resp = read(read_client_sock, params)
+    print(resp)
+    for r in resp:
       yield r
+
   except Exception as e:
     print(e)
     return {'msg': 'something wrong with read...'}
@@ -77,14 +73,20 @@ def try_read(params):
       read_client_sock.close()
 
 ### TODO: should we have a separate peek socket????
-def pre_read_check():
+def pre_read_check(params):
   # TODO: if we don't have it, send query to other clusters
+  # Check the validity of timestamps
+  try:
+    datetime.datetime.strptime(params['from_utc'], CONST_TIMESTAMP_FMT)
+    datetime.datetime.strptime(params['to_utc'], CONST_TIMESTAMP_FMT)
+  except Exception as e:
+    print(e)
+    return False
   return True
 
 def pre_write_check():
   # TODO: if we can't handle the data, send data to other clusters
   return True
-###
 
 def write(payload):
   write_sock = None
@@ -107,15 +109,20 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
   # def __init__(self, read_sock, write_sock):
   #   self.read_sock = read_sock
   #   self.write_sock = write_sock
-  def PutHandler(self, request_iterator, context):
+  def putHandler(self, request_iterator, context):
     print('this is a put request')
     if pre_write_check():
       for request in request_iterator:
         assert request.putRequest.metaData.uuid is not None
         payload = {
           'raw': request.putRequest.datFragment.data.decode(),
-          'timestamp_utc': request.putRequest.datFragment.timestamp_utc,
           'uuid': request.putRequest.metaData.uuid}
+        # timestamp for mesonet only, mesowest each row has diff timestamps
+        if request.putRequest.datFragment.timestamp_utc:
+          print('mesonet!')
+          payload['timestamp_utc'] = request.putRequest.datFragment.timestamp_utc
+        else:
+          print('mesowest!')
         write(payload)
       return data_pb2.Response(
         code=data_pb2.StatusCode.Value('Ok'),
@@ -125,15 +132,16 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
         code=data_pb2.StatusCode.Value('Failed'),
         msg="this node is full")
 
-  def GetHandler(self, request, context):
-    assert request.getRequest.metaData.uuid is not None
+  def getHandler(self, request, context):
     params = {
       'from_utc': request.getRequest.queryParams.from_utc,
       'to_utc': request.getRequest.queryParams.to_utc,
+      'target': 'mesowest' # default to mesowest
     }
     print('this is a get request with params %s' % str(params))
     if pre_read_check(params):
       for datFrag in try_read(params):
+        print(datFrag)
         yield data_pb2.Response(
           code=data_pb2.StatusCode.Value('Ok'),
           msg="get data successfully from the grpc server!",
@@ -141,9 +149,9 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
     else:
       yield data_pb2.Response(
         code=data_pb2.StatusCode.Value('Failed'),
-        msg="We don't have it!")
+        msg="Something wrong!")
 
-  def Ping(self, request, context):
+  def ping(self, request, context):
     print('this is a ping request')
     return data_pb2.Response(
       code=data_pb2.StatusCode.Value('Ok'),

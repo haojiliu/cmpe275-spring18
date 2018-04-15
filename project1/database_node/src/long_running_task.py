@@ -4,6 +4,7 @@ import time
 import datetime
 import threading
 import logging
+import hashlib
 
 import zmq
 
@@ -14,12 +15,12 @@ from pymongo import MongoClient
 client = MongoClient()
 client = MongoClient('localhost', 27017)
 db = client.main_db
-weather_data = db['weather_data']
-# weather_data.remove({})
-read_host = util.try_get_ip(constants.zmq_read_host)
-write_host = util.try_get_ip(constants.zmq_write_host)
+mesowest = db['mesowest']
+mesonet = db['mesonet']
 
-CONST_DB_LOWER_BOUND = 25 * 1024 * 4096 # 100 MB
+# TODO: for test only
+mesowest.remove({})
+mesonet.remove({})
 
 # SCHEMA:
 # db.data.insert({
@@ -30,23 +31,52 @@ CONST_DB_LOWER_BOUND = 25 * 1024 * 4096 # 100 MB
 #     "created_at_utc": // this row is inserted at
 #   })
 
+read_host = util.try_get_ip(constants.zmq_read_host)
+write_host = util.try_get_ip(constants.zmq_write_host)
+
+CONST_DB_LOWER_BOUND = 25 * 1024 * 4096 # 100 MB
+
+CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
+
+CONST_MEDIA_TYPE_TEXT_MESOWEST = 1
+
+def format_timestamp_mesowest(timestamp):
+  """
+  convert from 20180316/2145 to 2018-03-16 21:45:00
+  """
+  20180316/2145
+  tuples = timestamp.split('/')
+  assert len(tuples) == 2
+  year = tuples[0][:4]
+  month = tuples[0][4:6]
+  day = tuples[0][6:8]
+  hour = tuples[1][:2]
+  minute = tuples[1][2:4]
+
+  return '%s-%s-%s %s:%s:00' % (year, month, day, hour, minute)
+
+
 def is_disk_full():
   """reroute to other clusters if disk full here
   Returns: True if disk full
   """
   return os.statvfs('/data/db').f_bavail < CONST_DB_LOWER_BOUND
 
-def get_cursor(params):
+def get_cursor(target, params):
   """
   Returns: mongodb cursor object
   """
+  # these are in the format of '2016-18-19 12:12:12'
   from_utc = params['from_utc']
   to_utc = params['to_utc']
 
-  cursor = weather_data.find({
-    timestamp_utc: {
-        $gte: ISODate(from_utc),
-        $lt: ISODate(to_utc)
+  start = datetime.datetime.strptime(from_utc, CONST_TIMESTAMP_FMT)
+  end = datetime.datetime.strptime(to_utc, CONST_TIMESTAMP_FMT)
+
+  cursor = target.find({
+    'timestamp_utc': {
+        '$gte': start,
+        '$lt': end
     }
   })
   return cursor
@@ -78,23 +108,33 @@ def serialize(doc):
   Returns byte string
   """
   logging.warning(doc)
-  return ' '.join([doc['timestamp_utc'], doc['raw']]).encode()
+  # TODO: This is mesowest, for mesonet we need to return the timestamp as well
+  return doc['raw'].encode()
 
 def read(sock):
   while True:
-    logging.warning('waiting for read requests...')
-    params =sock.recv_json()
-    logging.warning(params)
-    cursor = get_cursor(params)
-    parts = [serialize(doc) for doc in cursor]
-    logging.warning('sending reading results back... %s' % str(parts))
-    # TODO: sending in chunks of lines, not line by line
-    sock.send_multipart(parts)
-    # TODO: do we really need to sleep here???
-    time.sleep(3)
+    try:
+      logging.warning('waiting for read requests...')
+      params =sock.recv_json()
+      logging.warning(params)
+      target = params['target']
+      if target == 'mesowest':
+        cursor = get_cursor(mesowest, params)
+      else:
+        cursor = get_cursor(mesonet, params)
 
-def _write(data_dict):
-  weather_data.insert_one(data_dict)
+      parts = [serialize(doc) for doc in cursor]
+      if not parts:
+        # This is to bypass zmq, empty list throws error
+        parts = ['No Result'.encode(),]
+      logging.warning('sending reading results back... %s' % str(parts))
+      sock.send_multipart(parts)
+
+      # TODO: sending in chunks of lines, not line by line
+      # TODO: do we really need to sleep here???
+      time.sleep(1)
+    except Exception as e:
+      logging.warning(e)
 
 def sanitize(line):
   """remove extra spaces, tabs, trailing/leading spaces, etc."""
@@ -104,26 +144,56 @@ def deserialize(line):
   station = line.split(' ')[0]
   return {'station': station, 'raw': line}
 
+def get_hash(s):
+  return hashlib.sha224(s.encode()).hexdigest()
+
+def _write(data_dict, target_collection):
+  if not target_collection.find_one({'hash': data_dict['hash']}):
+    logging.warning('new entry, going to write to db...')
+    target_collection.insert_one(data_dict)
+  else:
+    logging.warning('existed!! ignore this write')
+
 def write(sock):
   """Each message received will be one entry in the db"""
   while True:
     logging.warning('waiting for write requests...')
     data = sock.recv_json()
-    ts = time.time()
-    current_timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-
     raw = data.get('raw', 'placeholder write data from db node itself...')
-    timestamp_utc = data['timestamp_utc']
     uuid = data['uuid']
+    logging.warning(raw)
+
     for line in raw.splitlines():
-      logging.warning('Going to write the following station to the db node: %s' % line)
-      line = sanitize(line)
-      logging.warning('Going to write the following station to the db node: %s' % line)
-      d = deserialize(line)
-      d['timestamp_utc'] = timestamp_utc
-      d['created_at_utc'] = current_timestamp
-      d['uuid'] = uuid
-      _write(d)
+      try:
+        line = sanitize(line) + '\n'
+        # invalid data
+        if not line:
+          continue
+        # mesonet
+        ts = data.get('timestamp_utc')
+        target = mesonet
+        # mesowest
+        logging.warning(ts)
+        if not ts:
+          logging.warning('mesowest!!')
+          target = mesowest
+          ts = format_timestamp_mesowest(line.split()[1])
+
+
+        timestamp_utc = datetime.datetime.strptime(ts, CONST_TIMESTAMP_FMT)
+
+        d = deserialize(line)
+        d['timestamp_utc'] = timestamp_utc
+        d['created_at_utc'] = datetime.datetime.now()
+        d['uuid'] = uuid
+        # to detect duplicates
+        d['hash'] = get_hash(ts + d['station'])
+      except:
+        logging.warning('something wrong with writing this line %s' % line)
+        continue
+      # if nothing wrong, write this line
+      logging.warning('Going to write the following station to the db node: %s' % d)
+      _write(d, target)
 
 def main():
   # TODO: implement a retry context manager
