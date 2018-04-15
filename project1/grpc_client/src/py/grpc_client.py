@@ -121,7 +121,7 @@ class Client():
           metaData=MetaData(uuid='14829'),
           queryParams=QueryParams(from_utc=from_utc,to_utc=to_utc))
       )
-    for resp in self.stub.GetHandler(req):
+    for resp in self.stub.getHandler(req):
       if resp.code == 2:
         print('read failed at this node!')
         return False
