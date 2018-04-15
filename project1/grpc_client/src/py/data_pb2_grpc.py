@@ -14,18 +14,18 @@ class CommunicationServiceStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.PutHandler = channel.stream_unary(
-        '/CommunicationService/PutHandler',
+    self.putHandler = channel.stream_unary(
+        '/grpcComm.CommunicationService/putHandler',
         request_serializer=data__pb2.Request.SerializeToString,
         response_deserializer=data__pb2.Response.FromString,
         )
-    self.GetHandler = channel.unary_stream(
-        '/CommunicationService/GetHandler',
+    self.getHandler = channel.unary_stream(
+        '/grpcComm.CommunicationService/getHandler',
         request_serializer=data__pb2.Request.SerializeToString,
         response_deserializer=data__pb2.Response.FromString,
         )
-    self.Ping = channel.unary_unary(
-        '/CommunicationService/Ping',
+    self.ping = channel.unary_unary(
+        '/grpcComm.CommunicationService/ping',
         request_serializer=data__pb2.Request.SerializeToString,
         response_deserializer=data__pb2.Response.FromString,
         )
@@ -35,21 +35,21 @@ class CommunicationServiceServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
-  def PutHandler(self, request_iterator, context):
+  def putHandler(self, request_iterator, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def GetHandler(self, request, context):
+  def getHandler(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def Ping(self, request, context):
+  def ping(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -59,22 +59,22 @@ class CommunicationServiceServicer(object):
 
 def add_CommunicationServiceServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'PutHandler': grpc.stream_unary_rpc_method_handler(
-          servicer.PutHandler,
+      'putHandler': grpc.stream_unary_rpc_method_handler(
+          servicer.putHandler,
           request_deserializer=data__pb2.Request.FromString,
           response_serializer=data__pb2.Response.SerializeToString,
       ),
-      'GetHandler': grpc.unary_stream_rpc_method_handler(
-          servicer.GetHandler,
+      'getHandler': grpc.unary_stream_rpc_method_handler(
+          servicer.getHandler,
           request_deserializer=data__pb2.Request.FromString,
           response_serializer=data__pb2.Response.SerializeToString,
       ),
-      'Ping': grpc.unary_unary_rpc_method_handler(
-          servicer.Ping,
+      'ping': grpc.unary_unary_rpc_method_handler(
+          servicer.ping,
           request_deserializer=data__pb2.Request.FromString,
           response_serializer=data__pb2.Response.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
-      'CommunicationService', rpc_method_handlers)
+      'grpcComm.CommunicationService', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))

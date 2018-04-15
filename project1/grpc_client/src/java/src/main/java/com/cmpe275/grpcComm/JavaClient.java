@@ -16,6 +16,12 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
 import io.grpc.Status;
+
+import java.util.ArrayList;
+
+// to run this java file, use this command:
+// java -cp target/grpcJava-1.0-SNAPSHOT-jar-with-dependencies.jar com.cmpe275.grpcComm.JavaClient
+
 public class JavaClient {
     //const
     final static int CONST_MEDIA_TYPE_TEXT = 1;
@@ -73,10 +79,8 @@ public class JavaClient {
         Iterator<Response> it;
         try {
             it = blockingStub.getHandler(req);
-            //System.out.println("connect!!!" + it.getClass().getName());
-            for (int i = 1; it.hasNext(); i++) {
+            while(it.hasNext()) {
                 Response data = it.next();
-                //System.out.println("connect!!!" + data.getClass().getName());
                 if (data.getCodeValue() == 2) {
                     System.out.println("read failed at this node!");
                     return false;
@@ -99,6 +103,32 @@ public class JavaClient {
         
         return true;
     }
+
+    public boolean put() {
+        ByteString bstr = new ByteString("yo, jason");
+        DatFragment datFragment = DatFragment.newBuilder().setData(bstr).build();
+        //System.out.println("connect!!!" + queryParams.getClass().getName());
+        MetaData metaData = MetaData.newBuilder().setUuid("14829").build();
+        //System.out.println("connect!!!" + metaData.getClass().getName());
+        PutRequest putRequest = PutRequest.newBuilder().setMetaData(metaData).setDatFragment(datFragment).build();
+        //System.out.println("connect!!!" + getRequest.getClass().getName());
+        Request req = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setPutRequest(putRequest).build();
+
+        ArrayList<Request> list = new ArrayList<String>();
+ 
+        list.add(req);
+        
+        Iterator iterator = list.iterator();
+        System.out.println(iterator);
+        Response resp = blockingStub.putHandler(iterator);
+        System.out.println(resp.getMsg());
+        if (resp.getCodeValue() == 2) {
+            System.out.println("write failed at this node!");
+            return false;
+        }
+        return true;
+    }
+
     public static void main(String[] args) throws Exception {
 
         //get the right ip address
@@ -112,24 +142,30 @@ public class JavaClient {
         //deal with diffrent request
 
         //
-        JavaClient client = new JavaClient("0.0.0.0", 8080, "jason");
+        JavaClient client = new JavaClient("169.254.198.56", 8080, "jason");
         try {
             /* Access a service running on the local machine on port 50051 */
             String user = "world";
             if (args.length > 0) {
                 user = args[0]; /* Use the arg as the name to greet if provided */
             }
+
+            //ping
             client.ping(user);
 
-            String fileName = "temp.txt";
+            //get method
+            // String fileName = "temp.txt";
 
-            FileWriter fileWriter = new FileWriter(fileName);
+            // FileWriter fileWriter = new FileWriter(fileName);
 
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            // BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-            client.get(bufferedWriter,"2018-03-16 21:45:00","2018-03-16 23:45:00");
+            // client.get(bufferedWriter,"2018-03-16 21:45:00","2018-03-16 23:45:00");
 
-            bufferedWriter.close();
+            // bufferedWriter.close();
+
+            //put method
+            client.put();
         } finally {
             client.shutdown();
         }
