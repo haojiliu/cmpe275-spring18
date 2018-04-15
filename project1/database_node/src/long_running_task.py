@@ -31,7 +31,6 @@ mesonet.remove({})
 #     "created_at_utc": // this row is inserted at
 #   })
 
-
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
 
@@ -165,26 +164,34 @@ def write(sock):
     logging.warning(raw)
 
     for line in raw.splitlines():
-      line = sanitize(line) + '\n'
+      try:
+        line = sanitize(line) + '\n'
+        # invalid data
+        if not line:
+          continue
+        # mesonet
+        ts = data.get('timestamp_utc')
+        target = mesonet
+        # mesowest
+        logging.warning(ts)
+        if not ts:
+          logging.warning('mesowest!!')
+          target = mesowest
+          ts = format_timestamp_mesowest(line.split()[1])
 
-      # mesonet
-      ts = data.get('timestamp_utc')
-      target = mesonet
-      # mesowest
-      logging.warning(ts)
-      if not ts:
-        logging.warning('mesowest!!')
-        target = mesowest
-        ts = format_timestamp_mesowest(line.split()[1])
 
-      timestamp_utc = datetime.datetime.strptime(ts, CONST_TIMESTAMP_FMT)
+        timestamp_utc = datetime.datetime.strptime(ts, CONST_TIMESTAMP_FMT)
 
-      d = deserialize(line)
-      d['timestamp_utc'] = timestamp_utc
-      d['created_at_utc'] = datetime.datetime.now()
-      d['uuid'] = uuid
-      # to detect duplicates
-      d['hash'] = get_hash(ts + d['station'])
+        d = deserialize(line)
+        d['timestamp_utc'] = timestamp_utc
+        d['created_at_utc'] = datetime.datetime.now()
+        d['uuid'] = uuid
+        # to detect duplicates
+        d['hash'] = get_hash(ts + d['station'])
+      except:
+        logging.warning('something wrong with writing this line %s' % line)
+        continue
+      # if nothing wrong, write this line
       logging.warning('Going to write the following station to the db node: %s' % d)
       _write(d, target)
 
