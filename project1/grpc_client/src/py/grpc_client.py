@@ -88,7 +88,7 @@ class Client():
       fromSender=self.sender,
       toReceiver=self.receiver,
       ping=PingRequest(msg=msg))
-    resp = self.stub.Ping(req)
+    resp = self.stub.ping(req)
     print(resp.msg)
     return True
 
@@ -97,7 +97,7 @@ class Client():
     Returns: bool
     """
     req_iterator = put_req_iterator(fpath, self.sender, self.receiver)
-    resp = self.stub.PutHandler(req_iterator)
+    resp = self.stub.putHandler(req_iterator)
     print(resp.msg)
     if resp.code == 2:
       print('write failed at this node!')
@@ -115,7 +115,7 @@ class Client():
           metaData=MetaData(uuid='14829'),
           queryParams=QueryParams(from_utc=from_utc,to_utc=to_utc))
       )
-    for resp in self.stub.GetHandler(req):
+    for resp in self.stub.getHandler(req):
       if resp.code == 2:
         print('read failed at this node!')
         return False

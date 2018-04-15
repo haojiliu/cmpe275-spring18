@@ -21,9 +21,8 @@ import constants, util
 
 zmq_context = zmq.Context()
 
-write_host = util.try_get_ip(constants.zmq_write_host)
-read_host = util.try_get_ip(constants.zmq_read_host)
 
+write_host = read_host = 'asdfsd'
 write_connect_string = 'tcp://{}:{}'.format(
     write_host, constants.write_port)
 
@@ -62,6 +61,8 @@ def read(sock, params):
   return resp
 
 def try_read(params):
+  yield "hello".encode()
+
   read_client_sock = None
   try:
     read_client_sock = get_read_socket()
@@ -112,7 +113,7 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
   # def __init__(self, read_sock, write_sock):
   #   self.read_sock = read_sock
   #   self.write_sock = write_sock
-  def PutHandler(self, request_iterator, context):
+  def putHandler(self, request_iterator, context):
     print('this is a put request')
     if pre_write_check():
       for request in request_iterator:
@@ -135,8 +136,8 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
         code=data_pb2.StatusCode.Value('Failed'),
         msg="this node is full")
 
-  def GetHandler(self, request, context):
-    assert request.getRequest.metaData.uuid is not None
+  def getHandler(self, request, context):
+    #assert request.getRequest.metaData.uuid is not None
     params = {
       'from_utc': request.getRequest.queryParams.from_utc,
       'to_utc': request.getRequest.queryParams.to_utc,
@@ -155,7 +156,7 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
         code=data_pb2.StatusCode.Value('Failed'),
         msg="We don't have it!")
 
-  def Ping(self, request, context):
+  def ping(self, request, context):
     print('this is a ping request')
     return data_pb2.Response(
       code=data_pb2.StatusCode.Value('Ok'),
