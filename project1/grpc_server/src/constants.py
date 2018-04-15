@@ -1,5 +1,5 @@
-zmq_read_host = '172.18.0.3'
-# zmq_read_host = 'cmpe275_task_scheduler'
+#zmq_read_host = '172.18.0.3'
+zmq_read_host = 'cmpe275_task_scheduler'
 
 read_client_port = 5559
 
