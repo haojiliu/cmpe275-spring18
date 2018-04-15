@@ -1,6 +1,8 @@
 
 package com.cmpe275.grpcComm;
 
+import java.io.*;
+import java.io.IOException;
 import java.io.BufferedWriter;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
@@ -13,6 +15,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
+import io.grpc.Status;
 public class JavaClient {
     //const
     final static int CONST_MEDIA_TYPE_TEXT = 1;
@@ -58,22 +61,42 @@ public class JavaClient {
 
     public boolean get(BufferedWriter fp, String from_utc, String to_utc) {
         QueryParams queryParams = QueryParams.newBuilder().setFromUtc(from_utc).setToUtc(to_utc).build();
+        //System.out.println("connect!!!" + queryParams.getClass().getName());
         MetaData metaData = MetaData.newBuilder().setUuid("14829").build();
+        //System.out.println("connect!!!" + metaData.getClass().getName());
         GetRequest getRequest = GetRequest.newBuilder().setMetaData(metaData).setQueryParams(queryParams).build();
+        //System.out.println("connect!!!" + getRequest.getClass().getName());
         Request req = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setGetRequest(getRequest).setGetRequest(getRequest).build();
 
-        Iterator<ByteString> data;
-        data = blockingStub.getHandler(req);
-        if (data.)
-        for (Response resp : blockingStub.getHandler(req)) {
-            if (resp.getCodeValue() == 2) {
-                System.out.println("read failed at this node!");
-                return false;
-            } else {
-                String str = resp.getDatFragment().getData().toString();
-                fp.write(str);;
+        //System.out.println("connect!!!" + req.getClass().getName());
+
+        Iterator<Response> it;
+        try {
+            it = blockingStub.getHandler(req);
+            //System.out.println("connect!!!" + it.getClass().getName());
+            for (int i = 1; it.hasNext(); i++) {
+                Response data = it.next();
+                //System.out.println("connect!!!" + data.getClass().getName());
+                if (data.getCodeValue() == 2) {
+                    System.out.println("read failed at this node!");
+                    return false;
+                } else {
+                    ByteString byteStr = data.getDatFragment().getData();
+                    String str = byteStr.toStringUtf8();
+                    try {
+                        fp.write(str);
+                    } catch (IOException e ){
+                        System.out.println("Cannot write!");
+                        return false;
+                    }
+                }
             }
+        } catch (StatusRuntimeException e) {
+            logger.log(Level.WARNING, "RPC failed", e);
+            //System.out.println("Cannot get the iterator!");
+            return false;
         }
+        
         return true;
     }
     public static void main(String[] args) throws Exception {
@@ -97,6 +120,16 @@ public class JavaClient {
                 user = args[0]; /* Use the arg as the name to greet if provided */
             }
             client.ping(user);
+
+            String fileName = "temp.txt";
+
+            FileWriter fileWriter = new FileWriter(fileName);
+
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+            client.get(bufferedWriter,"2018-03-16 21:45:00","2018-03-16 23:45:00");
+
+            bufferedWriter.close();
         } finally {
             client.shutdown();
         }

@@ -21,9 +21,8 @@ import constants, util
 
 zmq_context = zmq.Context()
 
-write_host = util.try_get_ip(constants.zmq_write_host)
-read_host = util.try_get_ip(constants.zmq_read_host)
 
+write_host = read_host = 'asdfsd'
 write_connect_string = 'tcp://{}:{}'.format(
     write_host, constants.write_port)
 
@@ -61,23 +60,24 @@ def read(sock, params):
   return sock.recv_multipart()
 
 def try_read(params):
-  read_client_sock = None
-  try:
-    read_client_sock = get_read_socket()
-    for r in read(read_client_sock, params):
-      yield r
-  except Exception as e:
-    print(e)
-    return {'msg': 'something wrong with read...'}
-  finally:
-    # Make sure it's closed
-    if read_client_sock:
-      # print('closing the read socket...')
-      read_client_sock.disconnect(read_connect_string)
-      read_client_sock.close()
+  # read_client_sock = None
+  # try:
+  #   read_client_sock = get_read_socket()
+  #   for r in read(read_client_sock, params):
+  #     yield r
+  # except Exception as e:
+  #   print(e)
+  #   return {'msg': 'something wrong with read...'}
+  # finally:
+  #   # Make sure it's closed
+  #   if read_client_sock:
+  #     # print('closing the read socket...')
+  #     read_client_sock.disconnect(read_connect_string)
+  #     read_client_sock.close()
+  yield "hello".encode()
 
 ### TODO: should we have a separate peek socket????
-def pre_read_check():
+def pre_read_check(params):
   # TODO: if we don't have it, send query to other clusters
   return True
 
@@ -126,7 +126,7 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
         msg="this node is full")
 
   def getHandler(self, request, context):
-    assert request.getRequest.metaData.uuid is not None
+    #assert request.getRequest.metaData.uuid is not None
     params = {
       'from_utc': request.getRequest.queryParams.from_utc,
       'to_utc': request.getRequest.queryParams.to_utc,
