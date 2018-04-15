@@ -16,6 +16,11 @@ client = MongoClient('localhost', 27017)
 db = client.main_db
 mesowest = db['mesowest']
 mesonet = db['mesonet']
+
+# TODO: for test only
+mesowest.remove({})
+mesonet.remove({})
+
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
 
@@ -149,9 +154,10 @@ def write(sock):
     data = sock.recv_json()
     raw = data.get('raw', 'placeholder write data from db node itself...')
     uuid = data['uuid']
+    logging.warning(raw)
 
     for line in raw.splitlines():
-      line = sanitize(line)
+      line = sanitize(line) + '\n'
 
       # mesonet
       timestamp_utc = data.get('timestamp_utc')
