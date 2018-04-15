@@ -21,8 +21,9 @@ import constants, util
 
 zmq_context = zmq.Context()
 
+write_host = util.try_get_ip(constants.zmq_write_host)
+read_host = util.try_get_ip(constants.zmq_read_host)
 
-write_host = read_host = 'asdfsd'
 write_connect_string = 'tcp://{}:{}'.format(
     write_host, constants.write_port)
 
@@ -61,8 +62,6 @@ def read(sock, params):
   return resp
 
 def try_read(params):
-  yield "hello".encode()
-
   read_client_sock = None
   try:
     read_client_sock = get_read_socket()
