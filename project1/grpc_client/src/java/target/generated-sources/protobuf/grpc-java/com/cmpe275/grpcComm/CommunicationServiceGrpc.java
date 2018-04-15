@@ -27,7 +27,7 @@ public class CommunicationServiceGrpc {
       io.grpc.MethodDescriptor.create(
           io.grpc.MethodDescriptor.MethodType.CLIENT_STREAMING,
           generateFullMethodName(
-              "grpcComm.CommunicationService", "PutHandler"),
+              "grpcComm.CommunicationService", "putHandler"),
           io.grpc.protobuf.ProtoUtils.marshaller(com.cmpe275.grpcComm.Request.getDefaultInstance()),
           io.grpc.protobuf.ProtoUtils.marshaller(com.cmpe275.grpcComm.Response.getDefaultInstance()));
   @io.grpc.ExperimentalApi
@@ -36,7 +36,7 @@ public class CommunicationServiceGrpc {
       io.grpc.MethodDescriptor.create(
           io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING,
           generateFullMethodName(
-              "grpcComm.CommunicationService", "GetHandler"),
+              "grpcComm.CommunicationService", "getHandler"),
           io.grpc.protobuf.ProtoUtils.marshaller(com.cmpe275.grpcComm.Request.getDefaultInstance()),
           io.grpc.protobuf.ProtoUtils.marshaller(com.cmpe275.grpcComm.Response.getDefaultInstance()));
   @io.grpc.ExperimentalApi

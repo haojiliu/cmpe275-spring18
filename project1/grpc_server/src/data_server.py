@@ -107,7 +107,7 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
   # def __init__(self, read_sock, write_sock):
   #   self.read_sock = read_sock
   #   self.write_sock = write_sock
-  def PutHandler(self, request_iterator, context):
+  def putHandler(self, request_iterator, context):
     print('this is a put request')
     if pre_write_check():
       for request in request_iterator:
@@ -125,7 +125,7 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
         code=data_pb2.StatusCode.Value('Failed'),
         msg="this node is full")
 
-  def GetHandler(self, request, context):
+  def getHandler(self, request, context):
     assert request.getRequest.metaData.uuid is not None
     params = {
       'from_utc': request.getRequest.queryParams.from_utc,

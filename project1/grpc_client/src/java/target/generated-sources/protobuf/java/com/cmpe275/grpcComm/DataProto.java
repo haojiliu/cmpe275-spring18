@@ -78,8 +78,8 @@ public final class DataProto {
       "\013DatFragment\022\025\n\rtimestamp_utc\030\001 \001(\t\022\014\n\004d" +
       "ata\030\002 \001(\014*-\n\nStatusCode\022\013\n\007Unknown\020\000\022\006\n\002",
       "Ok\020\001\022\n\n\006Failed\020\0022\263\001\n\024CommunicationServic" +
-      "e\0225\n\nPutHandler\022\021.grpcComm.Request\032\022.grp" +
-      "cComm.Response(\001\0225\n\nGetHandler\022\021.grpcCom" +
+      "e\0225\n\nputHandler\022\021.grpcComm.Request\032\022.grp" +
+      "cComm.Response(\001\0225\n\ngetHandler\022\021.grpcCom" +
       "m.Request\032\022.grpcComm.Response0\001\022-\n\004ping\022" +
       "\021.grpcComm.Request\032\022.grpcComm.ResponseB#" +
       "\n\024com.cmpe275.grpcCommB\tDataProtoP\001b\006pro" +

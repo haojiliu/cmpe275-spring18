@@ -1,17 +1,17 @@
 
 package com.cmpe275.grpcComm;
 
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-
+import java.io.BufferedWriter;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import io.grpc.StatusRuntimeException;
 
-import com.cmpe275.grpcComm.*;
-// to run this java file, use command: 
-// java -cp target/grpcJava-1.0-SNAPSHOT-jar-with-dependencies.jar com.cmpe275.grpcComm.JavaClient
+import com.google.protobuf.ByteString;
+
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 
 public class JavaClient {
     //const
@@ -41,7 +41,7 @@ public class JavaClient {
     }
 
 // ===========
-    public void ping(String msg) {
+    public boolean ping(String msg) {
         PingRequest pingRequest = PingRequest.newBuilder().setMsg(msg).build();
         Request request = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setPing(pingRequest).build();
         Response response;
@@ -49,12 +49,33 @@ public class JavaClient {
             response = blockingStub.ping(request);
             logger.info("Code: " + response.getCode());
             logger.info("Msg: " + response.getMsg());
+            return true;
         } catch (StatusRuntimeException e) {
             logger.log(Level.WARNING, "RPC failed", e);
-            return;
+            return false;
         }
     }
 
+    public boolean get(BufferedWriter fp, String from_utc, String to_utc) {
+        QueryParams queryParams = QueryParams.newBuilder().setFromUtc(from_utc).setToUtc(to_utc).build();
+        MetaData metaData = MetaData.newBuilder().setUuid("14829").build();
+        GetRequest getRequest = GetRequest.newBuilder().setMetaData(metaData).setQueryParams(queryParams).build();
+        Request req = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setGetRequest(getRequest).setGetRequest(getRequest).build();
+
+        Iterator<ByteString> data;
+        data = blockingStub.getHandler(req);
+        if (data.)
+        for (Response resp : blockingStub.getHandler(req)) {
+            if (resp.getCodeValue() == 2) {
+                System.out.println("read failed at this node!");
+                return false;
+            } else {
+                String str = resp.getDatFragment().getData().toString();
+                fp.write(str);;
+            }
+        }
+        return true;
+    }
     public static void main(String[] args) throws Exception {
 
         //get the right ip address
