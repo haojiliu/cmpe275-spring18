@@ -84,6 +84,9 @@ def try_read(params):
 ### TODO: should we have a separate peek socket????
 def pre_read_check(params):
   # TODO: if we don't have it, send query to other clusters
+  # Check the validity of timestamps
+  # params['from_utc']
+  # params['to_utc']
   return True
 
 def pre_write_check():
@@ -153,7 +156,7 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
     else:
       yield data_pb2.Response(
         code=data_pb2.StatusCode.Value('Failed'),
-        msg="We don't have it!")
+        msg="Something wrong!")
 
   def ping(self, request, context):
     print('this is a ping request')
