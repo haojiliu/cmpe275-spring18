@@ -30,6 +30,8 @@ write_connect_string = 'tcp://{}:{}'.format(
 read_connect_string = 'tcp://{}:{}'.format(
     read_host, constants.read_client_port)
 
+CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
+
 def get_write_socket():
   write_sock = zmq_context.socket(zmq.PUB)
 
@@ -85,8 +87,11 @@ def try_read(params):
 def pre_read_check(params):
   # TODO: if we don't have it, send query to other clusters
   # Check the validity of timestamps
-  # params['from_utc']
-  # params['to_utc']
+  try:
+    datetime.datetime.strptime(params['from_utc'], CONST_TIMESTAMP_FMT)
+    datetime.datetime.strptime(params['to_utc'], CONST_TIMESTAMP_FMT)
+  except:
+    return False
   return True
 
 def pre_write_check():
