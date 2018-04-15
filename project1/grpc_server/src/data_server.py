@@ -1,20 +1,10 @@
-import time
+import time, datetime
 import grpc
 import data_pb2
 import data_pb2_grpc
 
 import json
 import os, logging, sys
-
-######################################
-# TODO: move all the crap below to another file
-_log = logging.getLogger(__name__)
-# _log.setLevel(logging.DEBUG)
-# ch = logging.StreamHandler(sys.stdout)
-# ch.setLevel(logging.DEBUG)
-# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-# ch.setFormatter(formatter)
-# _log.addHandler(ch)
 
 import zmq
 import constants, util
@@ -73,7 +63,6 @@ def try_read(params):
       yield r
 
   except Exception as e:
-    print('hahaha')
     print(e)
     return {'msg': 'something wrong with read...'}
   finally:
@@ -90,14 +79,14 @@ def pre_read_check(params):
   try:
     datetime.datetime.strptime(params['from_utc'], CONST_TIMESTAMP_FMT)
     datetime.datetime.strptime(params['to_utc'], CONST_TIMESTAMP_FMT)
-  except:
+  except Exception as e:
+    print(e)
     return False
   return True
 
 def pre_write_check():
   # TODO: if we can't handle the data, send data to other clusters
   return True
-###
 
 def write(payload):
   write_sock = None
@@ -144,7 +133,6 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
         msg="this node is full")
 
   def getHandler(self, request, context):
-    #assert request.getRequest.metaData.uuid is not None
     params = {
       'from_utc': request.getRequest.queryParams.from_utc,
       'to_utc': request.getRequest.queryParams.to_utc,

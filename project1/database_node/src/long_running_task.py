@@ -31,7 +31,6 @@ mesonet.remove({})
 #     "created_at_utc": // this row is inserted at
 #   })
 
-
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
 
