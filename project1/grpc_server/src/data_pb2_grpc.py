@@ -15,17 +15,17 @@ class CommunicationServiceStub(object):
       channel: A grpc.Channel.
     """
     self.PutHandler = channel.stream_unary(
-        '/CommunicationService/PutHandler',
+        '/grpcComm.CommunicationService/PutHandler',
         request_serializer=data__pb2.Request.SerializeToString,
         response_deserializer=data__pb2.Response.FromString,
         )
     self.GetHandler = channel.unary_stream(
-        '/CommunicationService/GetHandler',
+        '/grpcComm.CommunicationService/GetHandler',
         request_serializer=data__pb2.Request.SerializeToString,
         response_deserializer=data__pb2.Response.FromString,
         )
-    self.Ping = channel.unary_unary(
-        '/CommunicationService/Ping',
+    self.ping = channel.unary_unary(
+        '/grpcComm.CommunicationService/ping',
         request_serializer=data__pb2.Request.SerializeToString,
         response_deserializer=data__pb2.Response.FromString,
         )
@@ -49,7 +49,7 @@ class CommunicationServiceServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def Ping(self, request, context):
+  def ping(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -69,12 +69,12 @@ def add_CommunicationServiceServicer_to_server(servicer, server):
           request_deserializer=data__pb2.Request.FromString,
           response_serializer=data__pb2.Response.SerializeToString,
       ),
-      'Ping': grpc.unary_unary_rpc_method_handler(
-          servicer.Ping,
+      'ping': grpc.unary_unary_rpc_method_handler(
+          servicer.ping,
           request_deserializer=data__pb2.Request.FromString,
           response_serializer=data__pb2.Response.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
-      'CommunicationService', rpc_method_handlers)
+      'grpcComm.CommunicationService', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))

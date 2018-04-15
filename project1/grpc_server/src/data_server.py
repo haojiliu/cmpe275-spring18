@@ -143,7 +143,7 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
         code=data_pb2.StatusCode.Value('Failed'),
         msg="We don't have it!")
 
-  def Ping(self, request, context):
+  def ping(self, request, context):
     print('this is a ping request')
     return data_pb2.Response(
       code=data_pb2.StatusCode.Value('Ok'),

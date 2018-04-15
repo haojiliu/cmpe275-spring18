@@ -45,7 +45,7 @@ public class CommunicationServiceGrpc {
       io.grpc.MethodDescriptor.create(
           io.grpc.MethodDescriptor.MethodType.UNARY,
           generateFullMethodName(
-              "grpcComm.CommunicationService", "Ping"),
+              "grpcComm.CommunicationService", "ping"),
           io.grpc.protobuf.ProtoUtils.marshaller(com.cmpe275.grpcComm.Request.getDefaultInstance()),
           io.grpc.protobuf.ProtoUtils.marshaller(com.cmpe275.grpcComm.Response.getDefaultInstance()));
 

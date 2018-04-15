@@ -63,5 +63,5 @@ enum StatusCode {
 service CommunicationService {
   rpc PutHandler(stream Request) returns (Response);
   rpc GetHandler(Request) returns (stream Response);
-  rpc Ping(Request) returns (Response);
+  rpc ping(Request) returns (Response);
 }
