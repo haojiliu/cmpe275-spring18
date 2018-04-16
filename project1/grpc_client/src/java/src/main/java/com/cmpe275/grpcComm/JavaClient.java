@@ -1,137 +1,320 @@
 
 package com.cmpe275.grpcComm;
 
-import java.io.*;
-import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.ByteString;
+import com.mashape.unirest.http.Unirest;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
-
-import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
 public class JavaClient {
-    //const
-    final static int CONST_MEDIA_TYPE_TEXT = 1;
 
-    final static int CONST_CHUNK_SIZE = 10;
+	final static int CONST_MEDIA_TYPE_TEXT = 1;
 
-    final static String CONST_MESOWEST_HEADER = "STN YYMMDD/HHMM MNET SLAT SLON SELV TMPF SKNT DRCT GUST PMSL ALTI DWPF RELH WTHR P24I";
+	final static int CONST_CHUNK_SIZE = 10;
 
-    private static final Logger logger = Logger.getLogger(JavaClient.class.getName());
+	final static String CONST_MESOWEST_HEADER = "STN YYMMDD/HHMM MNET SLAT SLON SELV TMPF SKNT DRCT GUST PMSL ALTI DWPF RELH WTHR P24I";
 
-    private final ManagedChannel channel;
-    private final CommunicationServiceGrpc.CommunicationServiceBlockingStub blockingStub;
+	private static final Logger logger = Logger.getLogger(JavaClient.class.getName());
 
-    String sender = "";
-    String receiver = "";
-    public JavaClient(String host, int port, String sender) {
-        channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
-        blockingStub = CommunicationServiceGrpc.newBlockingStub(channel);
-        this.sender = sender;
-        this.receiver = host;
-        logger.info("Start client...");
-    }
+	final static String MY_IP = "localhost";
 
-    public void shutdown() throws InterruptedException {
-        channel.shutdown().awaitTermination(3, TimeUnit.SECONDS);
-    }
+	private final ManagedChannel channel;
+	private final CommunicationServiceGrpc.CommunicationServiceStub stub;
+	private final CommunicationServiceGrpc.CommunicationServiceBlockingStub blockingStub;
 
-// ===========
-    public boolean ping(String msg) {
-        PingRequest pingRequest = PingRequest.newBuilder().setMsg(msg).build();
-        Request request = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setPing(pingRequest).build();
-        Response response;
-        try {
-            response = blockingStub.ping(request);
-            logger.info("Code: " + response.getCode());
-            logger.info("Msg: " + response.getMsg());
-            return true;
-        } catch (StatusRuntimeException e) {
-            logger.log(Level.WARNING, "RPC failed", e);
-            return false;
-        }
-    }
+	private String sender = "";
+	private String receiver = "";
 
-    public boolean get(BufferedWriter fp, String from_utc, String to_utc) {
-        QueryParams queryParams = QueryParams.newBuilder().setFromUtc(from_utc).setToUtc(to_utc).build();
-        //System.out.println("connect!!!" + queryParams.getClass().getName());
-        MetaData metaData = MetaData.newBuilder().setUuid("14829").build();
-        //System.out.println("connect!!!" + metaData.getClass().getName());
-        GetRequest getRequest = GetRequest.newBuilder().setMetaData(metaData).setQueryParams(queryParams).build();
-        //System.out.println("connect!!!" + getRequest.getClass().getName());
-        Request req = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setGetRequest(getRequest).setGetRequest(getRequest).build();
+	public JavaClient(String host, int port, String sender) {
+		this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+		this.stub = CommunicationServiceGrpc.newStub(channel);
+		this.blockingStub = CommunicationServiceGrpc.newBlockingStub(channel);
+		this.sender = sender;
+		this.receiver = host;
+		logger.info("Start client...");
+	}
 
-        //System.out.println("connect!!!" + req.getClass().getName());
+	public void shutdown() throws InterruptedException {
+		this.channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+	}
 
-        Iterator<Response> it;
-        try {
-            it = blockingStub.getHandler(req);
-            //System.out.println("connect!!!" + it.getClass().getName());
-            for (int i = 1; it.hasNext(); i++) {
-                Response data = it.next();
-                //System.out.println("connect!!!" + data.getClass().getName());
-                if (data.getCodeValue() == 2) {
-                    System.out.println("read failed at this node!");
-                    return false;
-                } else {
-                    ByteString byteStr = data.getDatFragment().getData();
-                    String str = byteStr.toStringUtf8();
-                    try {
-                        fp.write(str);
-                    } catch (IOException e ){
-                        System.out.println("Cannot write!");
-                        return false;
-                    }
-                }
-            }
-        } catch (StatusRuntimeException e) {
-            logger.log(Level.WARNING, "RPC failed", e);
-            //System.out.println("Cannot get the iterator!");
-            return false;
-        }
-        
-        return true;
-    }
-    public static void main(String[] args) throws Exception {
+	public Iterator<String> preprocess(String fpath) {
+		boolean is_starts_reading = false;
+		boolean is_mesonet = false;
+		int current_chunk_size = 0;
+		List<String> resArray = new ArrayList<>();
+		String buffer = "";
+		BufferedReader br = null;
+		FileReader fr = null;
+		try {
+			fr = new FileReader(fpath);
+			br = new BufferedReader(fr);
+			String line;
+			while((line = br.readLine() ) != null ){
+				if(String.join(" ",line.trim().split("\\s+")).equalsIgnoreCase(CONST_MESOWEST_HEADER)) {
+					is_starts_reading = true;
+					continue;
+				} else if(false){
+					is_starts_reading = true;
+					is_mesonet = true;
+				}
+				if(!is_starts_reading) {
+					continue;
+				}
+				if(current_chunk_size == CONST_CHUNK_SIZE) {
+					String res = buffer;
+					current_chunk_size = 0;
+					buffer = "";
+					resArray.add(res);
+				} else {
+					buffer += line;
+					current_chunk_size++;
+				}
+			}
+			if(current_chunk_size > 0) {
+				resArray.add(buffer);
+			}
+		} catch (IOException e) {
+			logger.warning(e.getMessage());
+		} finally {
+			try {
+				if (br != null)
+					br.close();
+				if (fr != null)
+					fr.close();
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
+		return resArray.iterator();
+	}
 
-        //get the right ip address
+	public Iterator<Request> put_req_iterator(String fpath, String sender, String receiver) {
+		List<Request> reqArray = new ArrayList<>();
+		String uuid = UUID.randomUUID().toString();
+		Iterator<String> itr = preprocess(fpath);
+		while(itr.hasNext()) {
+			MetaData metaData = MetaData.newBuilder().setUuid(uuid).setMediaType(CONST_MEDIA_TYPE_TEXT).build();
+			DatFragment datFragment = DatFragment.newBuilder().setData(ByteString.copyFrom(itr.next().getBytes())).build();
+			PutRequest putRequest = PutRequest.newBuilder().setMetaData(metaData).setDatFragment(datFragment).build();
+			Request req = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setPutRequest(putRequest).build();
+			reqArray.add(req);
+		}
+		return reqArray.iterator();
+	}
 
-        //get all the nodes
+	public boolean ping(String msg) {
+		PingRequest pingRequest = PingRequest.newBuilder().setMsg(msg).build();
+		Request request = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setPing(pingRequest).build();
+		Response response;
+		try {
+			response = this.blockingStub.ping(request);
+			logger.info("Code: " + response.getCode());
+			logger.info("Msg: " + response.getMsg());
+			return true;
+		} catch (StatusRuntimeException e) {
+			logger.log(Level.WARNING, "RPC failed", e);
+			return false;
+		}
+	}
 
-        //parser for the command -- ankit
+//	public boolean put(String fpath) {
+//		Iterator<Request> req_iterator = put_req_iterator(fpath, this.sender, this.receiver);
+//		return true;
+//				Response response;
+//				try {
+//					response = this.blockingStub.putHandler(req_iterator);
+//					if(response.getCode().getNumber() == 2) {
+//						logger.log(Level.WARNING, "Write failed");
+//						return false;
+//					} else {
+//						return true;
+//					}
+//				} catch (StatusRuntimeException e) {
+//					logger.log(Level.WARNING, "RPC failed", e);
+//					return false;
+//				}
+//	}
 
-        //create the java client
+	public boolean put(String fpath) {
+		StreamObserver<Response> responseObserver = new StreamObserver<Response>() {
+			@Override
+			public void onNext(Response value) {
+				logger.info(value.getDatFragment().getData().toStringUtf8());
+			}
+			@Override
+			public void onError(Throwable t) {
+				t.printStackTrace();
+			}
+			@Override
+			public void onCompleted() {
+				logger.info("Completed");
+			}
+		};
 
-        //deal with diffrent request
+		StreamObserver<Request> requestObserver = this.stub.putHandler(responseObserver);
+		try {
+			Iterator<Request> req_iterator = put_req_iterator(fpath, this.sender, this.receiver);
+			while(req_iterator.hasNext()) {
+				requestObserver.onNext(req_iterator.next());	
+			}
+			// send completed
+			requestObserver.onCompleted();
+		} catch (Exception e) {
+			requestObserver.onError(e);
+			logger.log(Level.WARNING, "RPC failed: {0}", e.getMessage());
+			return false;
+		}
+		logger.info("putHandler DONE");
+		return true;
+	}
 
-        //
-        JavaClient client = new JavaClient("0.0.0.0", 8080, "jason");
-        try {
-            /* Access a service running on the local machine on port 50051 */
-            String user = "world";
-            if (args.length > 0) {
-                user = args[0]; /* Use the arg as the name to greet if provided */
-            }
-            client.ping(user);
+	public boolean get(BufferedWriter fp, String from_utc, String to_utc) {
+		String uuid = UUID.randomUUID().toString();
+		QueryParams queryParams = QueryParams.newBuilder().setFromUtc(from_utc).setToUtc(to_utc).build();
+		MetaData metaData = MetaData.newBuilder().setUuid(uuid).build();
+		GetRequest getRequest = GetRequest.newBuilder().setMetaData(metaData).setQueryParams(queryParams).build();
+		Request req = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setGetRequest(getRequest).build();
 
-            String fileName = "temp.txt";
+		Iterator<Response> it;
+		try {
+			it = this.blockingStub.getHandler(req);
+			while(it.hasNext()) {
+				Response data = it.next();
+				if (data.getCodeValue() == 2) {
+					System.out.println("read failed at this node!");
+					return false;
+				} else {
+					ByteString byteStr = data.getDatFragment().getData();
+					String str = byteStr.toStringUtf8();
+					try {
+						fp.write(str);
+					} catch (IOException e ){
+						System.out.println("Cannot write!");
+						return false;
+					}
+				}
+			}
+		} catch (StatusRuntimeException e) {
+			logger.log(Level.WARNING, "RPC failed", e);
+			//System.out.println("Cannot get the iterator!");
+			return false;
+		}
 
-            FileWriter fileWriter = new FileWriter(fileName);
+		return true;
+	}
 
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+	public static void main(String[] args) throws Exception {
 
-            client.get(bufferedWriter,"2018-03-16 21:45:00","2018-03-16 23:45:00");
+		String nodeString = Unirest.get("https://cmpe275-spring-18.mybluemix.net/get").asString().getBody();
+		String[] nodes = nodeString.split(",");
 
-            bufferedWriter.close();
-        } finally {
-            client.shutdown();
-        }
-    }
+		ArgumentParser parser = ArgumentParsers.newFor("Weather Data").build()
+				.defaultHelp(true)
+				.description("Weather Data Lake Java API v1.0");
+		parser.addArgument("-H","--host").type(String.class).setDefault("0.0.0.0").help("The host of the grpc server");
+		parser.addArgument("-P","--port").type(Integer.class).setDefault(8080).help("The port listened by grpc server");
+		parser.addArgument("-f","--file").type(String.class).setDefault("../mesowesteasy.out").help("The file path to upload");
+		parser.addArgument("-g","--get").action(Arguments.storeTrue()).setDefault(false).help("-g -t <from_utc> <to_utc>");
+		parser.addArgument("-u","--upload").action(Arguments.storeTrue()).setDefault(false).help("Upload data to the server");
+		parser.addArgument("-p","--ping").action(Arguments.storeTrue()).setDefault(false).help("Ping the server");
+		parser.addArgument("-t","--range").type(String.class).nargs(2).help("-t <from_utc> <to_utc>");
+		parser.addArgument("-s","--stations").nargs("*").help("-s <station1> <station2> <...>");
+		parser.addArgument("-m","--message").type(String.class).setDefault("Hello World!").help("-m 'Hello World!'");
+		parser.addArgument("-o","--output").type(String.class).setDefault("./result.out").help("-m 'Specify the output file locaton for queries'");
+
+		Namespace ns = null;
+		try {
+			ns = parser.parseArgs(args);
+		} catch (ArgumentParserException e) {
+			parser.handleError(e);
+			System.exit(1);
+		}
+		String host = ns.getString("host");
+		Integer port = ns.getInt("port");
+		JavaClient client = new JavaClient(host, port, MY_IP);
+		try {
+			if(ns.getBoolean("get")) {
+				List<String> range = ns.getList("range");
+				String from_utc = range.get(0);
+				String to_utc = range.get(1);
+				BufferedWriter bw = null;
+				FileWriter fw = null;
+				try {
+					fw = new FileWriter(ns.getString("output"));
+					bw = new BufferedWriter(fw);
+					if(client.get(bw, from_utc, to_utc)) {
+						logger.info("get succeeded at this node: " + client.receiver);
+					} else {
+						boolean isDone = false;
+						for(String node:nodes) {
+							client = new JavaClient(node,port,host);
+							if(client.get(bw, from_utc, to_utc)) {
+								logger.info("get succeeded at this node: " + client.receiver);
+								isDone = true;
+								break;
+							}
+						}
+						if(!isDone) {
+							logger.info("failed at all nodes");
+						}
+					}
+				} catch (IOException e) {
+					logger.warning(e.getMessage());
+				} finally {
+					try {
+						if (bw != null)
+							bw.close();
+						if (fw != null)
+							fw.close();
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+			} else if(ns.getBoolean("upload")) {
+				String fp = ns.getString("file");
+				if(client.put(fp)) {
+					logger.info("put succeeded at this node: " + client.receiver);
+				} else {
+					boolean isDone = false;
+					for(String node:nodes) {
+						client = new JavaClient(node,port,host);
+						if(client.put(fp)) {
+							logger.info("put succeeded at this node: " + client.receiver);
+							isDone = true;
+							break;
+						}
+					}
+					if(!isDone) {
+						logger.info("put failed at all other nodes");
+					}
+				}
+			} else if(ns.getBoolean("ping")) {
+				client.ping(ns.getString("message"));
+			}
+		} finally {
+			client.shutdown();
+		}
+
+	}
 }
