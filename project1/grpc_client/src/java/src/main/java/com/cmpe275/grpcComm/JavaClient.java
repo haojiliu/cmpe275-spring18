@@ -105,19 +105,20 @@ public class JavaClient {
     }
 
     public boolean put() {
-        ByteString bstr = new ByteString("yo, jason");
+
+        ByteString bstr = ByteString.copyFromUtf8("yo,jason");
+
         DatFragment datFragment = DatFragment.newBuilder().setData(bstr).build();
         //System.out.println("connect!!!" + queryParams.getClass().getName());
         MetaData metaData = MetaData.newBuilder().setUuid("14829").build();
         //System.out.println("connect!!!" + metaData.getClass().getName());
         PutRequest putRequest = PutRequest.newBuilder().setMetaData(metaData).setDatFragment(datFragment).build();
-        //System.out.println("connect!!!" + getRequest.getClass().getName());
         Request req = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setPutRequest(putRequest).build();
 
-        ArrayList<Request> list = new ArrayList<String>();
+        ArrayList<Request> list = new ArrayList<Request>();
  
         list.add(req);
-        
+        // Request[] li = {req};
         Iterator iterator = list.iterator();
         System.out.println(iterator);
         Response resp = blockingStub.putHandler(iterator);
@@ -142,7 +143,7 @@ public class JavaClient {
         //deal with diffrent request
 
         //
-        JavaClient client = new JavaClient("169.254.198.56", 8080, "jason");
+        JavaClient client = new JavaClient("0.0.0.0", 8080, "jason");
         try {
             /* Access a service running on the local machine on port 50051 */
             String user = "world";
