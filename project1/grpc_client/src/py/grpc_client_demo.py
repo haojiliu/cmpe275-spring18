@@ -24,7 +24,8 @@ CONST_MESOWEST_HEADER = 'STN YYMMDD/HHMM MNET SLAT SLON SELV TMPF SKNT DRCT GUST
 #     )[20:24])
 #     return my_ip
 
-nodes = requests.get('https://cmpe275-spring-18.mybluemix.net/get').text.split(',')
+# nodes = requests.get('https://cmpe275-spring-18.mybluemix.net/get').text.split(',')
+nodes = '169.254.208.33,169.254.210.252'.split(',')
 try:
   my_ip = get_ip_address('eth0')
 except:
@@ -177,7 +178,8 @@ def main():
           client = Client(node, port, host)
           if client.put(fpath=fp):
             print('put succeeded at %s' % node)
-        except:
+        except Exception as e:
+          print(e)
           print('put failed at node %s' % node)
 
     elif args.ping:
