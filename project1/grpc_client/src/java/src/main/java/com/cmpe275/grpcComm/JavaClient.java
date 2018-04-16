@@ -150,10 +150,10 @@ public class JavaClient {
 		};
 
 		StreamObserver<Request> requestObserver = this.stub.putHandler(responseObserver);
-		//logger.info("Stream UP!!!");
+		logger.info("Stream UP!!!");
 		try {
 			boolean is_starts_reading = false;
-			boolean is_mesonet = false;
+			//boolean is_mesonet = false;
 			int current_chunk_size = 0;
 
 			File f = new File(fpath);
@@ -161,8 +161,9 @@ public class JavaClient {
 			BufferedReader br = new BufferedReader(fr);
 			StringBuffer sb = new StringBuffer();
 			String line;
-			//logger.info("Buffers UP!!!");
+			logger.info("Buffers UP!!!");
 			while((line = br.readLine()) != null) {
+				logger.info("line:" + line);
 				if(String.join(" ",line.trim().split("\\s+")).equalsIgnoreCase(CONST_MESOWEST_HEADER)) {
 					is_starts_reading = true;
 					continue;
@@ -185,7 +186,6 @@ public class JavaClient {
 			}
 			
 			//THIS IF STATEMENT MIGHT NOT BE NECESSARY DEPEND ON HOW THE REST OF THE CLASS DESIGN THE PROCESS
-			//EXTRA THINKING REQUIRED!!
 			if(current_chunk_size > 0) {
 				DatFragment datFragment = DatFragment.newBuilder().setData(ByteString.copyFromUtf8(sb.toString()))
 						.build();
