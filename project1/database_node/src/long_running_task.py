@@ -35,7 +35,7 @@ mesonet = db['mesonet']
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
 
-CONST_DB_LOWER_BOUND = 25 * 1024 * 4096 # 100 MB
+CONST_DB_LOWER_BOUND = 1 * 1024 * 1024 # 1 MB
 
 CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
 
@@ -45,7 +45,7 @@ def format_timestamp_mesowest(timestamp):
   """
   convert from 20180316/2145 to 2018-03-16 21:45:00
   """
-  #20180316/2145
+
   tuples = timestamp.split('/')
   assert len(tuples) == 2
   year = tuples[0][:4]
@@ -61,7 +61,10 @@ def is_disk_full():
   """reroute to other clusters if disk full here
   Returns: True if disk full
   """
-  return os.statvfs('/data/db').f_bavail < CONST_DB_LOWER_BOUND
+  logging.warning('available space %s' % os.statvfs('/data/db').f_bavail)
+  val = os.statvfs('/data/db').f_bavail < CONST_DB_LOWER_BOUND
+  logging.warning(val)
+  return val
 
 def get_cursor(target, params):
   """
@@ -118,6 +121,12 @@ def read(sock):
       logging.warning('waiting for read requests...')
       params =sock.recv_json()
       logging.warning(params)
+      # if it's a pre check for write
+      if 'pre_write_check' in params:
+        val = is_disk_full()
+        sock.send_multipart([str(val).encode(),])
+        continue
+
       target = params['target']
       if target == 'mesowest':
         cursor = get_cursor(mesowest, params)

@@ -14,7 +14,7 @@ def report(job):
   # emailer.send(constants.EMAILER_SENDER,
   #   constants.EMAILER_SENDER_PASSWD,
   #   constants.EMAILER_RECIPIENTS,
-  #   constants.EMAILER_NODE_ERROR_SUBJECT,
+  #   constants.EMAILER_NODE_ERROR_UBJECT,
   #   constants.EMAILER_NODE_ERROR_BODY)
 
   return True

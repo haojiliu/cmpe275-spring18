@@ -172,11 +172,15 @@ def main():
       fp = args.file
       assert fp
       if not client.put(fpath=fp):
+        print('put to this cluster failed, trying other nodes...')
         for node in nodes:
+          print('putting to %s' % node)
           client = Client(node, port, host)
           if client.put(fpath=fp):
             print('put succeeded at one of the other nodes')
             break
+          else:
+            print('failed putting to %s' % node)
         print('put failed at all other nodes')
       else:
         print('put succeeded at this node')
