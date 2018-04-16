@@ -15,14 +15,14 @@ CONST_CHUNK_SIZE = 10  # number of lines per payload
 CONST_MESOWEST_HEADER = 'STN YYMMDD/HHMM MNET SLAT SLON SELV TMPF SKNT DRCT GUST PMSL ALTI DWPF RELH WTHR P24I'
 
 # TODO: move to elsewhere
-def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    my_ip = socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15].encode())
-    )[20:24])
-    return my_ip
+# def get_ip_address(ifname):
+#     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+#     my_ip = socket.inet_ntoa(fcntl.ioctl(
+#         s.fileno(),
+#         0x8915,  # SIOCGIFADDR
+#         struct.pack('256s', ifname[:15].encode())
+#     )[20:24])
+#     return my_ip
 
 nodes = requests.get('https://cmpe275-spring-18.mybluemix.net/get').text.split(',')
 try:
