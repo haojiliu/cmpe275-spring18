@@ -23,11 +23,6 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
-// to run this java file, use this command:
-// mvn clean package
-// java -cp target/grpcJava-1.0-SNAPSHOT-jar-with-dependencies.jar com.cmpe275.grpcComm.JavaClient
-
-    
 import io.grpc.stub.StreamObserver;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -105,14 +100,14 @@ public class JavaClient {
 				if(String.join(" ",line.trim().split("\\s+")).equalsIgnoreCase(CONST_MESOWEST_HEADER)) {
 					is_starts_reading = true;
 					continue;
-				} 
+				}
 				if (!is_starts_reading) {
 					continue;
 				}
 
 				sb.append(line + "\n");
 				current_chunk_size++;
-				
+
 				if(current_chunk_size == CONST_CHUNK_SIZE) {
 					DatFragment datFragment = DatFragment.newBuilder().setData(ByteString.copyFromUtf8(sb.toString())).build();
 					logger.info("Data: " + sb.toString());
@@ -121,7 +116,7 @@ public class JavaClient {
 
 					current_chunk_size = 0;
 					sb = new StringBuffer();
-				} 
+				}
 				// else {
 				// 	sb.append(line + "\n");
 				// 	current_chunk_size++;
@@ -129,7 +124,7 @@ public class JavaClient {
 				// 	logger.info("tempDataaa: " + sb.toString());
 				// }
 			}
-			
+
 			//THIS IF STATEMENT MIGHT NOT BE NECESSARY DEPEND ON HOW THE REST OF THE CLASS DESIGN THE PROCESS
 			if(current_chunk_size > 0) {
 				logger.info("Dataaa: " + sb.toString());
@@ -149,7 +144,7 @@ public class JavaClient {
 			logger.log(Level.WARNING, "RPC failed: {0}", e.getMessage());
 			return false;
 		}
-		
+
 		logger.info("putHandler DONE");
 		return true;
 	}

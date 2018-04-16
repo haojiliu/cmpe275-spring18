@@ -114,6 +114,13 @@ docker build -t cmpe275_db_base_image database_node/db_base_image/
 cd project1 && ./boostrap.sh
 ```
 
+### To run javascript:
+```
+brew install maven
+mvn clean package
+java -cp target/grpcJava-1.0-SNAPSHOT-jar-with-dependencies.jar com.cmpe275.grpcComm.JavaClient
+```
+
 ### To monitor processes on db node:
 ```
 localhost:9003
