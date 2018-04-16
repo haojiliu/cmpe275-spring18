@@ -171,15 +171,14 @@ def main():
     elif args.upload:
       fp = args.file
       assert fp
-      if not client.put(fpath=fp):
-        for node in nodes:
+      for node in nodes:
+        print('going to put data to node %s' % node)
+        try:
           client = Client(node, port, host)
           if client.put(fpath=fp):
-            print('put succeeded at one of the other nodes')
-            break
-        print('put failed at all other nodes')
-      else:
-        print('put succeeded at this node')
+            print('put succeeded at %s' % node)
+        except:
+          print('put failed at node %s' % node)
 
     elif args.ping:
       client.ping(msg=args.message)

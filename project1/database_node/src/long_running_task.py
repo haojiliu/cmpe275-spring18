@@ -19,8 +19,8 @@ mesowest = db['mesowest']
 mesonet = db['mesonet']
 
 # TODO: for test only
-mesowest.remove({})
-mesonet.remove({})
+# mesowest.remove({})
+# mesonet.remove({})
 
 # SCHEMA:
 # db.data.insert({
