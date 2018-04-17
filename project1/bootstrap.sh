@@ -1,5 +1,5 @@
 echo "registering cluster..."
-myip="$(ifconfig | grep -A 1 'en0' | tail -1 | cut -d ':' -f 2 | cut -d ' ' -f 2)"
+myip="$(ifconfig | grep -A 1 'en5' | tail -1 | cut -d ':' -f 2 | cut -d ' ' -f 2)"
 echo "writing to bluemix: $myip"
 url="https://cmpe275-spring-18.mybluemix.net/put/$myip"
 curl $url

@@ -117,12 +117,7 @@ public class JavaClient {
 					current_chunk_size = 0;
 					sb = new StringBuffer();
 				}
-				// else {
-				// 	sb.append(line + "\n");
-				// 	current_chunk_size++;
-				// 	logger.info("chunk size: " + current_chunk_size);
-				// 	logger.info("tempDataaa: " + sb.toString());
-				// }
+
 			}
 
 			//THIS IF STATEMENT MIGHT NOT BE NECESSARY DEPEND ON HOW THE REST OF THE CLASS DESIGN THE PROCESS
@@ -177,7 +172,6 @@ public class JavaClient {
 			}
 		} catch (StatusRuntimeException e) {
 			logger.log(Level.WARNING, "RPC failed", e);
-			//System.out.println("Cannot get the iterator!");
 			return false;
 		}
 

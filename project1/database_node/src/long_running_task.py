@@ -15,13 +15,16 @@ from pymongo import MongoClient
 client = MongoClient()
 client = MongoClient('localhost', 27017)
 db = client.main_db
-mesowest = db['mesowest']
-mesonet = db['mesonet']
+weather_data = db['weather_data']
+
+# mesowest = db['mesowest']
+# mesonet = db['mesonet']
 
 # TODO: for test only
 # mesowest.remove({})
 # mesonet.remove({})
 
+# TODO: update schema
 # SCHEMA:
 # db.data.insert({
 #     "uuid": // defined by the grpc client
@@ -30,7 +33,6 @@ mesonet = db['mesonet']
 #     "raw": // all columns except the station column
 #     "created_at_utc": // this row is inserted at
 #   })
-
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
 
@@ -38,25 +40,14 @@ CONST_DB_LOWER_BOUND = 1 * 1024 * 1024 # 1 MB
 
 CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
 
-CONST_MEDIA_TYPE_TEXT_MESOWEST = 1
+CONST_STD_COL_LIST = 'STN YYMMDD/HHMM MNET SLAT SLON SELV TMPF SKNT DRCT GUST PMSL ALTI DWPF RELH WTHR P24I'.split()
+CONST_NUM_OF_COLS = len(CONST_STD_COL_LIST)
 
-def format_timestamp_mesowest(timestamp):
-  """
-  convert from 20180316/2145 to 2018-03-16 21:45:00
-  """
-  tuples = timestamp.split('/')
-  assert len(tuples) == 2
-  year = tuples[0][:4]
-  month = tuples[0][4:6]
-  day = tuples[0][6:8]
-  hour = tuples[1][:2]
-  minute = tuples[1][2:4]
-
-  return '%s-%s-%s %s:%s:00' % (year, month, day, hour, minute)
-
+CONST_DELIMITER = ','
 
 def is_disk_full():
-  """reroute to other clusters if disk full here
+  """
+  Re-route to other clusters if disk full here
   Returns: True if disk full
   """
   logging.warning('available space %s' % os.statvfs('/data/db').f_bavail)
@@ -110,7 +101,6 @@ def serialize(doc):
   Returns byte string
   """
   logging.warning(doc)
-  # TODO: This is mesowest, for mesonet we need to return the timestamp as well
   return doc['raw'].encode()
 
 def read(sock):
@@ -125,12 +115,7 @@ def read(sock):
         sock.send_multipart([str(val).encode(),])
         continue
 
-      target = params['target']
-      if target == 'mesowest':
-        cursor = get_cursor(mesowest, params)
-      else:
-        cursor = get_cursor(mesonet, params)
-
+      cursor = get_cursor(weather_data, params)
       parts = [serialize(doc) for doc in cursor]
       if not parts:
         # This is to bypass zmq, empty list throws error
@@ -149,8 +134,29 @@ def sanitize(line):
   return line.strip()
 
 def deserialize(line):
-  station = line.split(' ')[0]
-  return {'station': station, 'raw': line}
+  """split a line int columns"""
+  cols = line.split(CONST_DELIMITER)
+  logging.warning(cols)
+
+  assert len(cols) == CONST_NUM_OF_COLS
+  logging.warning('hey deserialize...')
+
+  station = cols[0]
+  ts = cols[1]
+
+  d = {
+    'station': station,
+    'raw': line,
+    'timestamp_utc': datetime.datetime.strptime(ts, CONST_TIMESTAMP_FMT),
+    'created_at_utc': datetime.datetime.now(),
+    'hash': get_hash(line)
+  }
+
+  # Adding all columns
+  for idx, val in enumerate(CONST_STD_COL_LIST):
+    d[val] = cols[idx]
+
+  return d
 
 def get_hash(s):
   return hashlib.sha224(s.encode()).hexdigest()
@@ -169,39 +175,23 @@ def write(sock):
     data = sock.recv_json()
     raw = data.get('raw', 'placeholder write data from db node itself...')
     uuid = data['uuid']
-    logging.warning(raw)
 
     for line in raw.splitlines():
       try:
-        line = sanitize(line) + '\n'
+        line = sanitize(line)
         # invalid data
         if not line:
           continue
-        # mesonet
-        ts = data.get('timestamp_utc')
-        target = mesonet
-        # mesowest
-        logging.warning(ts)
-        if not ts:
-          logging.warning('mesowest!!')
-          target = mesowest
-          ts = format_timestamp_mesowest(line.split()[1])
-
-
-        timestamp_utc = datetime.datetime.strptime(ts, CONST_TIMESTAMP_FMT)
-
         d = deserialize(line)
-        d['timestamp_utc'] = timestamp_utc
-        d['created_at_utc'] = datetime.datetime.now()
         d['uuid'] = uuid
-        # to detect duplicates
-        d['hash'] = get_hash(ts + d['station'])
       except:
         logging.warning('something wrong with writing this line %s' % line)
+        logging.exception()
         continue
       # if nothing wrong, write this line
       logging.warning('Going to write the following station to the db node: %s' % d)
-      _write(d, target)
+      _write(d, weather_data)
+    logging.warning('Write succeeded...')
 
 def main():
   # TODO: implement a retry context manager
