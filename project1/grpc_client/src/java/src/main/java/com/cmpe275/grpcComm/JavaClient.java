@@ -58,6 +58,7 @@ public class JavaClient {
 		this.sender = sender;
 		this.receiver = host;
 		logger.info("Start client...");
+		logger.info(this.sender);
 	}
 
 	public void shutdown() throws InterruptedException {
@@ -213,6 +214,8 @@ public class JavaClient {
 		parser.addArgument("-s","--stations").nargs("*").help("-s <station1> <station2> <...>");
 		parser.addArgument("-m","--message").type(String.class).setDefault("Hello World!").help("-m 'Hello World!'");
 		parser.addArgument("-o","--output").type(String.class).setDefault("./result.out").help("-m 'Specify the output file locaton for queries'");
+		parser.addArgument("-i", "--sender").type(String.class).setDefault(MY_IP)
+				.help("-m 'The sender IP address in format: x.x.x.x'");
 
 		Namespace ns = null;
 		try {
@@ -223,7 +226,8 @@ public class JavaClient {
 		}
 		String host = ns.getString("host");
 		Integer port = ns.getInt("port");
-		JavaClient client = new JavaClient(host, port, MY_IP);
+		String sender = ns.getString("sender");
+		JavaClient client = new JavaClient(host, port, sender);
 		try {
 			if(ns.getBoolean("get")) {
 				List<String> range = ns.getList("range");
