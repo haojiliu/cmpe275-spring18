@@ -36,6 +36,8 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
+
+
 public class JavaClient {
 
 	final static String CONST_MEDIA_TYPE_TEXT_MESOWEST = "mesowest";
@@ -49,14 +51,14 @@ public class JavaClient {
 	final CountDownLatch done = new CountDownLatch(1);
 
 	final static String CONST_MESOWEST_HEADER = "STN YYMMDD/HHMM MNET SLAT SLON SELV TMPF SKNT DRCT GUST PMSL ALTI DWPF RELH WTHR P24I";
-
+	final static String CONST_MESONET_HEADER = "# id,name,mesonet,lat,lon,elevation,agl,cit,state,country,active";
 	private final static String CONST_NEWLINE_CHAR = "\n";
-	final static String CONST_MESONET_HEADER = "";
+
 	private static final Logger logger = Logger.getLogger(JavaClient.class.getName());
 
 	private final static char CONST_DELIMITER = ',';
 
-	private final static String[] CONST_STD_COL_LIST = CONST_MESOWEST_HEADER.split(" ");
+	private final static String[] CONST_STD_COL_LIST = CONST_MESOWEST_HEADER.replaceAll("\\s+", " ").split(" ");
 
 	final static String MY_IP = "localhost";
 
@@ -106,6 +108,32 @@ public class JavaClient {
 			boolean is_mesonet = false;
 			int current_chunk_size = 0;
 
+			String[] names = fpath.split("/");
+			String fileName = names[names.length - 1];
+			String suspectedTimestamp;
+			if (fileName.contains(".")){
+				//System.out.println(fileName);
+				String[] fileNameArray = fileName.split("\\.");
+				suspectedTimestamp = fileNameArray[0];
+			} else {
+				suspectedTimestamp = fileName;
+			}
+			//System.out.println(suspectedTimestamp);
+			String timestamp = "";
+			if (suspectedTimestamp.matches("[0-9]{8}_[0-9]{4}")) {
+				is_mesonet = true;
+				timestamp = suspectedTimestamp;
+			}
+
+			String dataSourcePattern = "";
+			if (!is_mesonet) {
+				dataSourcePattern = CONST_MEDIA_TYPE_TEXT_MESOWEST;
+			} else {
+				dataSourcePattern = CONST_MEDIA_TYPE_TEXT_MESONET;
+			}
+
+			String timestampUTC = formatTimestampForMesonet(timestamp);
+
 			File f = new File(fpath);
 			FileReader fr = new FileReader(f);
 			BufferedReader br = new BufferedReader(fr);
@@ -115,21 +143,24 @@ public class JavaClient {
 			while ((line = br.readLine()) != null) {
 				logger.info("line:" + line);
 
-				if (String.join(" ", line.trim().split("\\s+")).equalsIgnoreCase(CONST_MESOWEST_HEADER)) {
+				if (String.join(" ", line.trim().split("\\s+")).equalsIgnoreCase(CONST_MESOWEST_HEADER) || line.trim().equalsIgnoreCase(CONST_MESONET_HEADER)) {
 					is_starts_reading = true;
+					logger.info("Start reading...");
 					continue;
 				}
 				if (!is_starts_reading) {
 					continue;
 				}
 
-				String dataSourcePattern = "";
-				if (!is_mesonet) {
-					dataSourcePattern = CONST_MEDIA_TYPE_TEXT_MESOWEST;
-				} else {
-					dataSourcePattern = CONST_MEDIA_TYPE_TEXT_MESONET;
+				String input = "";
+				try{
+					input = normalize(line, dataSourcePattern, timestampUTC);
+				} catch (Exception e) {
+					System.out.println("Unsuccessful normalization!");
+					continue;
 				}
-				sb.append(normalize(line, dataSourcePattern) + "\n");
+				
+				sb.append(input + "\n");
 				current_chunk_size++;
 
 				if (current_chunk_size == CONST_CHUNK_SIZE) {
@@ -168,9 +199,9 @@ public class JavaClient {
 		return true;
 	}
 
-	private String normalize(String line, String dataSourcePattern) {
+	private String normalize(String line, String dataSourcePattern, String timestampUtc) {
 		if (dataSourcePattern == CONST_MEDIA_TYPE_TEXT_MESONET) {
-			return normalizeMesonetHelper(line, "testing timestmap");
+			return normalizeMesonetHelper(line, timestampUtc);
 		} else if (dataSourcePattern == CONST_MEDIA_TYPE_TEXT_MESOWEST) {
 			return normalizeMesowestHelper(line);
 		} else {
@@ -180,28 +211,54 @@ public class JavaClient {
 	}
 
 	private String normalizeMesonetHelper(String line, String timestampUtc) {
-		String[] cols = line.trim().split(" ");
-		String res = cols[0] + timestampUtc;
+		String[] cols = line.trim().replaceAll("\\s+", "").split(",");
+		if (cols.length != 11) {
+			System.out.println("Wrong number of colums!");
+		}
+		String res = cols[0] + CONST_DELIMITER + timestampUtc + CONST_DELIMITER + "NULL";
 
-		for (int i = 1; i < cols.length; i++) {
-			res += cols[i];
+		for (int i = 3; i < 6; i++) {
+			res += CONST_DELIMITER + cols[i];
+		}
+
+		for (int i = 6; i < CONST_STD_COL_LIST.length; i++) {
+			res += CONST_DELIMITER + "NULL";
 		}
 		return res;
 
 	}
 
 	private String normalizeMesowestHelper(String line) {
-		String[] cols = line.trim().split(" ");
+
+		String[] cols = line.trim().replaceAll("\\s+", " ").split(" ");
 		String timestampUtc = formatTimestampForMesowest(cols[1]);
-		String res = cols[0] + timestampUtc;
+		String res = cols[0] + CONST_DELIMITER + timestampUtc;
 		for (int i = 2; i < cols.length; i++) {
-			res += cols[i];
+			res += CONST_DELIMITER + cols[i];
 		}
 		return res;
 	}
 
 	private String formatTimestampForMesowest(String timestamp) {
 		String[] terms = timestamp.trim().split("/");
+
+		if (terms.length != 2) {
+			System.out.println("Wrong format for Mesowest timestamp");
+			return null;
+		}
+
+		String year = terms[0].substring(0, 4);
+		String month = terms[0].substring(4, 6);
+		String day = terms[0].substring(6, 8);
+		String hr = terms[1].substring(0, 2);
+		String min = terms[1].substring(2, 4);
+
+		String res = year + "-" + month + "-" + day + " " + hr + ":" + min + ":00";
+		return res;
+	}
+
+	private String formatTimestampForMesonet(String timestamp) {
+		String[] terms = timestamp.trim().split("_");
 
 		if (terms.length != 2) {
 			System.out.println("Wrong format for Mesowest timestamp");
