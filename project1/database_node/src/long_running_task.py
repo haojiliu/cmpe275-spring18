@@ -62,6 +62,8 @@ def get_cursor(target, params):
   # these are in the format of '2016-18-19 12:12:12'
   from_utc = params['from_utc']
   to_utc = params['to_utc']
+  # TODO: json load and parse
+  additional_params = params['additional_params']
 
   start = datetime.datetime.strptime(from_utc, CONST_TIMESTAMP_FMT)
   end = datetime.datetime.strptime(to_utc, CONST_TIMESTAMP_FMT)

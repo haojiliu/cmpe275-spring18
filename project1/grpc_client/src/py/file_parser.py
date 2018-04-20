@@ -1,5 +1,7 @@
 # Author: Haoji Liu
 import uuid
+import os
+
 from data_pb2 import Request, PutRequest, DatFragment, MetaData
 
 """This takes in a data file, normalize it to the standard data pattern we have."""
@@ -11,17 +13,43 @@ CONST_MEDIA_TYPE_TEXT_MESONET = 'mesonet'
 CONST_CHUNK_SIZE = 3  # number of lines per payload
 
 CONST_MESOWEST_HEADER = 'STN YYMMDD/HHMM MNET SLAT SLON SELV TMPF SKNT DRCT GUST PMSL ALTI DWPF RELH WTHR P24I'
-CONST_MESONET_HEADER = '??????'
+CONST_MESONET_HEADER = '# id,name,mesonet,lat,lon,elevation,agl,cit,state,country,active'
 
 CONST_HEADERS = (CONST_MESOWEST_HEADER, CONST_MESONET_HEADER)
 
+# only station, time, lat, lon, elv exist in mesonet data
+CONST_MESONET_STR = '%s,%s,NULL,%s,%s,%s,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL'
+CONST_MESONET_TO_STD_MATCHING_COLS = (0,1,4,5,6) # these columns have matching columns in mesowest
+
+
 CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
+
+CONST_MESONET_DELIMITER = ','
 
 CONST_DELIMITER = ','
 CONST_NEWLINE_CHAR = '\n'
 
 # station, timestamp_utc, mnet??, latitude, longitude, temperature, ...
 CONST_STD_COL_LIST = CONST_MESOWEST_HEADER.split()
+CONST_MESONET_COL_LIST = ['id','name','mesonet','lat','lon','elevation','agl','cit','state','country','active']
+
+
+def format_timestamp_mesonet(timestamp):
+  """
+  convert from 20180316_2145 to 2018-03-16 21:45:00
+  """
+  try:
+    tuples = timestamp.split('_')
+    assert len(tuples) == 2
+    year = int(tuples[0][:4])
+    month = int(tuples[0][4:6])
+    day = int(tuples[0][6:8])
+    hour = int(tuples[1][:2])
+    minute = int(tuples[1][2:4])
+
+    return '%d-%d-%d %d:%d:00' % (year, month, day, hour, minute)
+  except:
+    return None
 
 def format_timestamp_mesowest(timestamp):
   """
@@ -40,19 +68,30 @@ def format_timestamp_mesowest(timestamp):
 def _normalize_mesonet(line, timestamp_utc):
   """Map mesonet to our standard format"""
   # add timestamp
-  cols = line.split()
-  return CONST_DELIMITER.join(cols[:1] + [timestamp_utc] + cols[1:])
+  cols = line.split(CONST_MESONET_DELIMITER)
+  assert len(cols) == len(CONST_MESONET_COL_LIST)
+
+  new_cols = cols[:1] + [timestamp_utc] + cols[1:]
+  matching_cols = []
+  # constructing a list of matching values
+  for idx in CONST_MESONET_TO_STD_MATCHING_COLS:
+    matching_cols.append(new_cols[idx])
+  # fill in values and return
+  return CONST_MESONET_STR % tuple(matching_cols)
 
 def _normalize_mesowest(line):
   """Map mesowest to our standard format"""
   # replace timestamp with standardized one
   cols = line.split()
+  assert len(cols) == len(CONST_STD_COL_LIST)
+
   timestamp_utc = format_timestamp_mesowest(cols[1])
   return CONST_DELIMITER.join(cols[:1] + [timestamp_utc] + cols[2:])
 
-def normalize(line, data_source):
+def normalize(line, data_source, timestamp_utc):
   if data_source == CONST_MEDIA_TYPE_TEXT_MESONET:
-    return _normalize_mesonet(line)
+    assert timestamp_utc is not None
+    return _normalize_mesonet(line, timestamp_utc)
   elif data_source == CONST_MEDIA_TYPE_TEXT_MESOWEST:
     return _normalize_mesowest(line)
   else:
@@ -67,24 +106,35 @@ def parse_file(fpath):
   is_starts_reading = False
   is_mesonet = False
 
-  # if fpath.split('/')[-1] looks like a timestamp:
-  #   is_mesonet = True
-  #
+  filename, file_extension = os.path.splitext(fpath.split('/')[-1])
+  timestamp_utc = format_timestamp_mesonet(filename)
+  is_mesonet = timestamp_utc is not None
+
   with open(fpath) as f:
     for line in f:
-      possible_header = ' '.join(line.strip().split())
-      # For both mesonet and mesowest
-      if possible_header in CONST_HEADERS:
-        is_starts_reading = True
-        # skip this line
-        continue
+      if not is_starts_reading:
+        if is_mesonet:
+          possible_header = line.strip()
+        else:
+          possible_header = ' '.join(line.strip().split())
+        # For both mesonet and mesowest
+        if possible_header in CONST_HEADERS:
+          is_starts_reading = True
+          # skip this line
+          continue
 
       if not is_starts_reading:
         continue
 
       # we can't call strip() here as it will remove the newline char
       data_source = CONST_MEDIA_TYPE_TEXT_MESONET if is_mesonet else CONST_MEDIA_TYPE_TEXT_MESOWEST
-      buffer.append(normalize(line, data_source))
+      try:
+        normalized_line = normalize(line, data_source, timestamp_utc)
+      except Exception as e:
+        print(e)
+        print('skipping line: %s' % line)
+        continue
+      buffer.append(normalized_line)
 
       if len(buffer) == CONST_CHUNK_SIZE:
         res = CONST_NEWLINE_CHAR.join(buffer)
@@ -106,6 +156,7 @@ def put_req_iterator(fpath, sender, receiver):
       )
 
 if __name__ == '__main__':
-  for chunk in parse_file('../mesowesteasy.out'):
+  #for chunk in parse_file('../mesowesteasy.out'):
+  for chunk in parse_file('../20170101_1030.csv'):
     print('--------')
     print(chunk)

@@ -56,7 +56,7 @@ class Client():
       toReceiver=self.receiver,
       getRequest=GetRequest(
           metaData=MetaData(),
-          queryParams=QueryParams(from_utc=from_utc,to_utc=to_utc))
+          queryParams=QueryParams(from_utc=from_utc,to_utc=to_utc, params=params))
       )
     fp.write(CONST_MESOWEST_HEADER + CONST_NEWLINE_CHAR)
 
