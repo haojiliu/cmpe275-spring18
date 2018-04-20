@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +24,11 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
+// to run this java file, use this command:
+// mvn clean package
+// java -cp target/grpcJava-1.0-SNAPSHOT-jar-with-dependencies.jar com.cmpe275.grpcComm.JavaClient
+
+    
 import io.grpc.stub.StreamObserver;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -32,6 +38,10 @@ import net.sourceforge.argparse4j.inf.Namespace;
 
 public class JavaClient {
 
+	final static String CONST_MEDIA_TYPE_TEXT_MESOWEST = "mesowest";
+
+	final static String CONST_MEDIA_TYPE_TEXT_MESONET = "mesonet";
+
 	final static int CONST_MEDIA_TYPE_TEXT = 1;
 
 	final static int CONST_CHUNK_SIZE = 2;
@@ -40,7 +50,13 @@ public class JavaClient {
 
 	final static String CONST_MESOWEST_HEADER = "STN YYMMDD/HHMM MNET SLAT SLON SELV TMPF SKNT DRCT GUST PMSL ALTI DWPF RELH WTHR P24I";
 
+	private final static String CONST_NEWLINE_CHAR = "\n";
+	final static String CONST_MESONET_HEADER = "";
 	private static final Logger logger = Logger.getLogger(JavaClient.class.getName());
+
+	private final static char CONST_DELIMITER = ',';
+
+	private final static String[] CONST_STD_COL_LIST = CONST_MESOWEST_HEADER.split(" ");
 
 	final static String MY_IP = "localhost";
 
@@ -87,7 +103,7 @@ public class JavaClient {
 		//logger.info("Stream UP!!!");
 		try {
 			boolean is_starts_reading = false;
-			//boolean is_mesonet = false;
+			boolean is_mesonet = false;
 			int current_chunk_size = 0;
 
 			File f = new File(fpath);
@@ -96,9 +112,10 @@ public class JavaClient {
 			StringBuffer sb = new StringBuffer();
 			String line;
 			//logger.info("Buffers UP!!!");
-			while((line = br.readLine()) != null) {
+			while ((line = br.readLine()) != null) {
 				logger.info("line:" + line);
-				if(String.join(" ",line.trim().split("\\s+")).equalsIgnoreCase(CONST_MESOWEST_HEADER)) {
+
+				if (String.join(" ", line.trim().split("\\s+")).equalsIgnoreCase(CONST_MESOWEST_HEADER)) {
 					is_starts_reading = true;
 					continue;
 				}
@@ -106,21 +123,27 @@ public class JavaClient {
 					continue;
 				}
 
-				sb.append(line + "\n");
+				String dataSourcePattern = "";
+				if (!is_mesonet) {
+					dataSourcePattern = CONST_MEDIA_TYPE_TEXT_MESOWEST;
+				} else {
+					dataSourcePattern = CONST_MEDIA_TYPE_TEXT_MESONET;
+				}
+				sb.append(normalize(line, dataSourcePattern) + "\n");
 				current_chunk_size++;
 
-				if(current_chunk_size == CONST_CHUNK_SIZE) {
-					DatFragment datFragment = DatFragment.newBuilder().setData(ByteString.copyFromUtf8(sb.toString())).build();
+				if (current_chunk_size == CONST_CHUNK_SIZE) {
+					DatFragment datFragment = DatFragment.newBuilder().setData(ByteString.copyFromUtf8(sb.toString()))
+							.build();
 					logger.info("Data: " + sb.toString());
-					Request req = Request.newBuilder().setPutRequest(PutRequest.newBuilder().setDatFragment(datFragment).build()).build();
+					Request req = Request.newBuilder()
+							.setPutRequest(PutRequest.newBuilder().setDatFragment(datFragment).build()).build();
 					requestObserver.onNext(req);
 
 					current_chunk_size = 0;
 					sb = new StringBuffer();
 				}
-
 			}
-
 			//THIS IF STATEMENT MIGHT NOT BE NECESSARY DEPEND ON HOW THE REST OF THE CLASS DESIGN THE PROCESS
 			if(current_chunk_size > 0) {
 				logger.info("Dataaa: " + sb.toString());
@@ -140,9 +163,59 @@ public class JavaClient {
 			logger.log(Level.WARNING, "RPC failed: {0}", e.getMessage());
 			return false;
 		}
-
+		
 		logger.info("putHandler DONE");
 		return true;
+	}
+
+	private String normalize(String line, String dataSourcePattern) {
+		if (dataSourcePattern == CONST_MEDIA_TYPE_TEXT_MESONET) {
+			return normalizeMesonetHelper(line, "testing timestmap");
+		} else if (dataSourcePattern == CONST_MEDIA_TYPE_TEXT_MESOWEST) {
+			return normalizeMesowestHelper(line);
+		} else {
+			System.out.println("Unsupported data format.");
+			return null;
+		}
+	}
+
+	private String normalizeMesonetHelper(String line, String timestampUtc) {
+		String[] cols = line.trim().split(" ");
+		String res = cols[0] + timestampUtc;
+
+		for (int i = 1; i < cols.length; i++) {
+			res += cols[i];
+		}
+		return res;
+
+	}
+
+	private String normalizeMesowestHelper(String line) {
+		String[] cols = line.trim().split(" ");
+		String timestampUtc = formatTimestampForMesowest(cols[1]);
+		String res = cols[0] + timestampUtc;
+		for (int i = 2; i < cols.length; i++) {
+			res += cols[i];
+		}
+		return res;
+	}
+
+	private String formatTimestampForMesowest(String timestamp) {
+		String[] terms = timestamp.trim().split("/");
+
+		if (terms.length != 2) {
+			System.out.println("Wrong format for Mesowest timestamp");
+			return null;
+		}
+
+		String year = terms[0].substring(0, 4);
+		String month = terms[0].substring(4, 6);
+		String day = terms[0].substring(6, 8);
+		String hr = terms[1].substring(0, 2);
+		String min = terms[1].substring(2, 4);
+
+		String res = year + "-" + month + "-" + day + " " + hr + ":" + min + ":00";
+		return res;
 	}
 
 	public boolean get(BufferedWriter fp, String from_utc, String to_utc) {
@@ -153,6 +226,13 @@ public class JavaClient {
 		Request req = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setGetRequest(getRequest).build();
 
 		Iterator<Response> it;
+		try {
+			fp.write(CONST_MESOWEST_HEADER + CONST_NEWLINE_CHAR);
+		} catch (IOException e) {
+			System.out.println("Cannot write!");
+			return false;
+		}
+		
 		try {
 			it = this.blockingStub.getHandler(req);
 			while(it.hasNext()) {
@@ -173,6 +253,7 @@ public class JavaClient {
 			}
 		} catch (StatusRuntimeException e) {
 			logger.log(Level.WARNING, "RPC failed", e);
+			//System.out.println("Cannot get the iterator!");
 			return false;
 		}
 

@@ -20,6 +20,7 @@ com/cmpe275/grpcComm/CommunicationServiceGrpc$2.class
 com/cmpe275/grpcComm/PingRequest$Builder.class
 com/cmpe275/grpcComm/PutRequest.class
 com/cmpe275/grpcComm/QueryParams$1.class
+com/cmpe275/grpcComm/JavaFileParser.class
 com/cmpe275/grpcComm/CommunicationServiceGrpc$CommunicationServiceFutureClient.class
 com/cmpe275/grpcComm/QueryParamsOrBuilder.class
 com/cmpe275/grpcComm/GetRequest.class
