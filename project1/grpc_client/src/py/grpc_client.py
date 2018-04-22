@@ -47,10 +47,6 @@ class Client():
     """
     Returns: bool
     """
-    # TODO: Parse the additional query filters
-    if params:
-      pass
-
     req = Request(
       fromSender=self.sender,
       toReceiver=self.receiver,

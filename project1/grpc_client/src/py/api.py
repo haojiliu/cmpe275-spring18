@@ -12,7 +12,7 @@ print('getting nodes list %s' % nodes)
 
 def api_get(fpath, from_utc, to_utc, host, port, sender, params_json=None):
   """
-  params - str, a json string, list of dicts
+  params_json - str, a json string, list of dicts
   """
   client = grpc_client.Client(host, port, sender)
   try:
