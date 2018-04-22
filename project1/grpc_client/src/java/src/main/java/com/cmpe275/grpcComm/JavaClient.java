@@ -66,8 +66,8 @@ public class JavaClient {
 	private final CommunicationServiceGrpc.CommunicationServiceStub stub;
 	private final CommunicationServiceGrpc.CommunicationServiceBlockingStub blockingStub;
 
-	private String sender = "";
-	private String receiver = "";
+	public String sender = "";
+	public String receiver = "";
 
 	public JavaClient(String host, int port, String sender) {
 		this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
@@ -275,7 +275,10 @@ public class JavaClient {
 		return res;
 	}
 
-	public boolean get(BufferedWriter fp, String from_utc, String to_utc) {
+	public boolean get(BufferedWriter fp, String from_utc, String to_utc, String param_json) {
+		// if (param_json != null) {
+		// 	dosomething
+		// }
 		String uuid = UUID.randomUUID().toString();
 		QueryParams queryParams = QueryParams.newBuilder().setFromUtc(from_utc).setToUtc(to_utc).build();
 		MetaData metaData = MetaData.newBuilder().setUuid(uuid).build();
@@ -333,102 +336,4 @@ public class JavaClient {
 			return false;
 		}
 	}
-
-	public static void main(String[] args) throws Exception {
-
-		String nodeString = Unirest.get("https://cmpe275-spring-18.mybluemix.net/get").asString().getBody();
-		String[] nodes = nodeString.split(",");
-
-		ArgumentParser parser = ArgumentParsers.newFor("Weather Data").build()
-				.defaultHelp(true)
-				.description("Weather Data Lake Java API v1.0");
-		parser.addArgument("-H","--host").type(String.class).setDefault("0.0.0.0").help("The host of the grpc server");
-		parser.addArgument("-P","--port").type(Integer.class).setDefault(8080).help("The port listened by grpc server");
-		parser.addArgument("-f","--file").type(String.class).setDefault("../mesowesteasy.out").help("The file path to upload");
-		parser.addArgument("-g","--get").action(Arguments.storeTrue()).setDefault(false).help("-g -t <from_utc> <to_utc>");
-		parser.addArgument("-u","--upload").action(Arguments.storeTrue()).setDefault(false).help("Upload data to the server");
-		parser.addArgument("-p","--ping").action(Arguments.storeTrue()).setDefault(false).help("Ping the server");
-		parser.addArgument("-t","--range").type(String.class).nargs(2).help("-t <from_utc> <to_utc>");
-		parser.addArgument("-s","--stations").nargs("*").help("-s <station1> <station2> <...>");
-		parser.addArgument("-m","--message").type(String.class).setDefault("Hello World!").help("-m 'Hello World!'");
-		parser.addArgument("-o","--output").type(String.class).setDefault("./result.out").help("-m 'Specify the output file locaton for queries'");
-		parser.addArgument("-i", "--sender").type(String.class).setDefault(MY_IP)
-				.help("-m 'The sender IP address in format: x.x.x.x'");
-
-		Namespace ns = null;
-		try {
-			ns = parser.parseArgs(args);
-		} catch (ArgumentParserException e) {
-			parser.handleError(e);
-			System.exit(1);
-		}
-		String host = ns.getString("host");
-		Integer port = ns.getInt("port");
-		String sender = ns.getString("sender");
-		JavaClient client = new JavaClient(host, port, sender);
-		try {
-			if(ns.getBoolean("get")) {
-				List<String> range = ns.getList("range");
-				String from_utc = range.get(0);
-				String to_utc = range.get(1);
-				BufferedWriter bw = null;
-				FileWriter fw = null;
-				try {
-					fw = new FileWriter(ns.getString("output"));
-					bw = new BufferedWriter(fw);
-					if(client.get(bw, from_utc, to_utc)) {
-						logger.info("get succeeded at this node: " + client.receiver);
-					} else {
-						boolean isDone = false;
-						for(String node:nodes) {
-							client = new JavaClient(node,port,host);
-							if(client.get(bw, from_utc, to_utc)) {
-								logger.info("get succeeded at this node: " + client.receiver);
-								isDone = true;
-								break;
-							}
-						}
-						if(!isDone) {
-							logger.info("failed at all nodes");
-						}
-					}
-				} catch (IOException e) {
-					logger.warning(e.getMessage());
-				} finally {
-					try {
-						if (bw != null)
-							bw.close();
-						if (fw != null)
-							fw.close();
-					} catch (IOException ex) {
-						ex.printStackTrace();
-					}
-				}
-			} else if(ns.getBoolean("upload")) {
-				String fp = ns.getString("file");
-				if(client.put(fp)) {
-					logger.info("put succeeded at this node: " + client.receiver);
-				} else {
-					boolean isDone = false;
-					for(String node:nodes) {
-						client = new JavaClient(node,port,host);
-						if(client.put(fp)) {
-							logger.info("put succeeded at this node: " + client.receiver);
-							isDone = true;
-							break;
-						}
-					}
-					if(!isDone) {
-						logger.info("put failed at all other nodes");
-					}
-				}
-			} else if(ns.getBoolean("ping")) {
-				client.ping(ns.getString("message"));
-			}
-		} finally {
-			client.shutdown();
-		}
-
-	}
-
 }
