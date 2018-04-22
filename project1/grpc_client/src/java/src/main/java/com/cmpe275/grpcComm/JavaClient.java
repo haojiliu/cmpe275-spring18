@@ -304,7 +304,7 @@ public class JavaClient {
 					ByteString byteStr = data.getDatFragment().getData();
 					String str = byteStr.toStringUtf8();
 					try {
-						fp.write(str);
+						fp.write(str + CONST_NEWLINE_CHAR);
 					} catch (IOException e ){
 						System.out.println("Cannot write!");
 						return false;
