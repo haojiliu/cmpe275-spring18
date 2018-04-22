@@ -15,6 +15,15 @@ docker build -t cmpe275_db_base_image database_node/db_base_image/
 ```
 docker-compose build db
 docker-compose up -d db
+
+# to ssh into the container:
+
+docker exec -it cmpe275_db bash
+
+# to tail the logs in the container:
+
+tail -f /srv/logs/*.log
+
 ```
 
 ### whenever the IP addr changes or is assigned to your node, do the following:
