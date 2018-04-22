@@ -139,7 +139,7 @@ class DataServer(data_pb2_grpc.CommunicationServiceServicer):
       'from_utc': request.getRequest.queryParams.from_utc,
       'to_utc': request.getRequest.queryParams.to_utc,
       'target': 'mesowest', # default to mesowest,
-      'additional_params': requet.getRequest.queryParams.params
+      'params_json': request.getRequest.queryParams.params_json
     }
     logging.warning('this is a get request with params %s' % str(params))
     if pre_read_check(params):

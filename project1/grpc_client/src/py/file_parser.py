@@ -41,13 +41,13 @@ def format_timestamp_mesonet(timestamp):
   try:
     tuples = timestamp.split('_')
     assert len(tuples) == 2
-    year = int(tuples[0][:4])
-    month = int(tuples[0][4:6])
-    day = int(tuples[0][6:8])
-    hour = int(tuples[1][:2])
-    minute = int(tuples[1][2:4])
+    year = tuples[0][:4]
+    month = tuples[0][4:6]
+    day = tuples[0][6:8]
+    hour = tuples[1][:2]
+    minute = tuples[1][2:4]
 
-    return '%d-%d-%d %d:%d:00' % (year, month, day, hour, minute)
+    return '%s-%s-%s %s:%s:00' % (year, month, day, hour, minute)
   except:
     return None
 
@@ -109,7 +109,6 @@ def parse_file(fpath):
   filename, file_extension = os.path.splitext(fpath.split('/')[-1])
   timestamp_utc = format_timestamp_mesonet(filename)
   is_mesonet = timestamp_utc is not None
-
   with open(fpath) as f:
     for line in f:
       if not is_starts_reading:
