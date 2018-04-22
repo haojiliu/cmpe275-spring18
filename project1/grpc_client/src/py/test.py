@@ -1,5 +1,5 @@
 # Haoji Liu
-import argparse, datetime
+import argparse, datetime, json
 import requests, argparse, socket, fcntl, struct
 import api
 
@@ -61,7 +61,17 @@ def main():
       from_utc, to_utc = args.range[0], args.range[1]
       assert from_utc
       assert to_utc
-      return api.api_get(args.output, from_utc, to_utc, host, port, sender)
+      params = json.dumps([{
+          'lhs': 'TMPF',
+          'op': 'gt',
+          'rhs': '0'
+        },
+        {
+          'lhs': 'STN',
+          'op': 'eq',
+          'rhs': ['HCOT1', 'BBN']
+        }])
+      return api.api_get(args.output, from_utc, to_utc, host, port, sender, params)
 
     elif args.upload:
       fp = args.file

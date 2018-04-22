@@ -10,9 +10,11 @@ CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
 nodes = requests.get('https://cmpe275-spring-18.mybluemix.net/get').text.split(',')
 print('getting nodes list %s' % nodes)
 
-def api_get(fpath, from_utc, to_utc, host, port, sender, params=None):
+def api_get(fpath, from_utc, to_utc, host, port, sender, params_json=None):
+  """
+  params_json - str, a json string, list of dicts
+  """
   client = grpc_client.Client(host, port, sender)
-  print('going to geeeeet...')
   try:
     datetime.datetime.strptime(from_utc, CONST_TIMESTAMP_FMT)
     datetime.datetime.strptime(to_utc, CONST_TIMESTAMP_FMT)
@@ -20,15 +22,14 @@ def api_get(fpath, from_utc, to_utc, host, port, sender, params=None):
     raise
     return False
 
-  print('going to get...')
   with open(fpath, 'w') as fp:
-    if not client.get(fp, from_utc=from_utc, to_utc=to_utc, params=params):
+    if not client.get(fp, from_utc=from_utc, to_utc=to_utc, params_json=params_json):
       for node in nodes:
         print('trying... %s' % node)
         if node == host:
           continue
         client = grpc_client.Client(node, port, host)
-        if client.get(fp, from_utc=from_utc, to_utc=to_utc, params=params):
+        if client.get(fp, from_utc=from_utc, to_utc=to_utc, params_json=params_json):
           print('get succeeded at one of the other nodes')
           break
       print('get failed at all other nodes')

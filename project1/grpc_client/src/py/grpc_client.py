@@ -43,20 +43,16 @@ class Client():
     print('returning true!')
     return True
 
-  def get(self, fp, from_utc, to_utc, params):
+  def get(self, fp, from_utc, to_utc, params_json):
     """
     Returns: bool
     """
-    # TODO: Parse the additional query filters
-    if params:
-      pass
-
     req = Request(
       fromSender=self.sender,
       toReceiver=self.receiver,
       getRequest=GetRequest(
           metaData=MetaData(),
-          queryParams=QueryParams(from_utc=from_utc,to_utc=to_utc))
+          queryParams=QueryParams(from_utc=from_utc,to_utc=to_utc, params_json=params_json))
       )
     fp.write(CONST_MESOWEST_HEADER + CONST_NEWLINE_CHAR)
 

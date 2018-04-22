@@ -1,5 +1,5 @@
 # Haoji Liu
-import sys, os
+import sys, os, json
 import time
 import datetime
 import threading
@@ -45,6 +45,15 @@ CONST_NUM_OF_COLS = len(CONST_STD_COL_LIST)
 
 CONST_DELIMITER = ','
 
+CONST_COL_TYPE_MAP = {
+  'SLAT': float,
+  'SLON': float,
+  'SELV': float,
+  'TMPF': float,
+  'GUST': float,
+  'ALTI': float,
+}
+
 def is_disk_full():
   """
   Re-route to other clusters if disk full here
@@ -55,23 +64,85 @@ def is_disk_full():
   logging.warning(val)
   return val
 
+def get_op_from_additional_params(param):
+  op = param['op']
+  if op == 'eq':
+    if isinstance(param['rhs'], list):
+      return '$in'
+    else:
+      return '$eq'
+  elif op == 'lt':
+    return '$lt'
+  elif op == 'gt':
+    return '$gt'
+  elif op == 'gte':
+    return '$gte'
+  elif op == 'in':
+    return '$in'
+  else:
+    logging.warning('invalid operator %s' % op)
+
+def try_cast_col(col, val):
+  """In case we need float instead of string"""
+  logging.warning('try casting %s for column %s' % (val, col))
+  cast_val = val
+  if col in CONST_COL_TYPE_MAP:
+    if isinstance(val, list):
+      cast_val = [CONST_COL_TYPE_MAP[col](item) for item in val]
+    else:
+      cast_val = CONST_COL_TYPE_MAP[col](val)
+
+  return cast_val
+
 def get_cursor(target, params):
   """
+  params looks like:
+  [
+  {
+    'lhs': 'TMPF',
+    'op': 'gt',
+    'rhs': '0'
+  },
+  {
+    'lhs': 'STN',
+    'op': 'eq',
+    'rhs': ['HCOT1', 'BBN']
+  }
+  ]
   Returns: mongodb cursor object
   """
   # these are in the format of '2016-18-19 12:12:12'
   from_utc = params['from_utc']
   to_utc = params['to_utc']
+  # TODO: json load and parse
+  try:
+    additional_params = json.loads(params['params_json'])
+  except:
+    logging.warning('loading params json failed...')
+    additional_params = []
 
   start = datetime.datetime.strptime(from_utc, CONST_TIMESTAMP_FMT)
   end = datetime.datetime.strptime(to_utc, CONST_TIMESTAMP_FMT)
 
-  cursor = target.find({
+  filters = {
     'timestamp_utc': {
         '$gte': start,
         '$lt': end
     }
-  })
+  }
+
+  for param in additional_params:
+    lhs = param['lhs']
+    op = get_op_from_additional_params(param)
+
+    filters[lhs] = {
+      op: try_cast_col(lhs, param['rhs'])
+    }
+
+  logging.warning('..........')
+  logging.warning(filters)
+
+  cursor = target.find(filters)
   return cursor
 
 def connect_read_port(context):
@@ -154,7 +225,7 @@ def deserialize(line):
 
   # Adding all columns
   for idx, val in enumerate(CONST_STD_COL_LIST):
-    d[val] = cols[idx]
+    d[val] = try_cast_col(val, cols[idx])
 
   return d
 
