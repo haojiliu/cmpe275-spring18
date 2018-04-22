@@ -1,5 +1,4 @@
-
-package main.java.com.cmpe275.grpcComm;
+package com.cmpe275.grpcComm;
 
 import com.cmpe275.grpcComm.JavaClient;
 import java.time.*;

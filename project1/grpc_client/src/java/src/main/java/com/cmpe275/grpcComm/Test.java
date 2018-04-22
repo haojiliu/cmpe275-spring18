@@ -1,6 +1,6 @@
-package main.java.com.cmpe275.grpcComm;
+package com.cmpe275.grpcComm;
 
-import main.java.com.cmpe275.grpcComm.JavaAPI;
+import com.cmpe275.grpcComm.JavaAPI;
 
 import io.grpc.stub.StreamObserver;
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -40,7 +40,6 @@ import io.grpc.StatusRuntimeException;
 
 public class Test {
     public static void main(String[] args) throws Exception {
-        System.out.println("start test...");
         ArgumentParser parser = ArgumentParsers.newFor("Weather Data").build().defaultHelp(true)
                 .description("Weather Data Lake Java API v1.0");
         parser.addArgument("-H", "--host").type(String.class).setDefault("0.0.0.0").help("The host of the grpc server");
@@ -74,14 +73,14 @@ public class Test {
         String sender = ns.getString("sender");
 
         try {
-            System.out.println("start tring...");
+            //System.out.println("start tring...");
 			if(ns.getBoolean("get")) {
 				List<String> range = ns.getList("range");
 				String from_utc = range.get(0);
 				String to_utc = range.get(1);
                 JavaAPI.getAPI(ns.getString("output"), from_utc, to_utc, host, port, sender,"testing");
             } else if (ns.getBoolean("ping")) {
-                System.out.println("start ping...");
+                //System.out.println("start ping...");
                 JavaAPI.pingAPI(ns.getString("message"), host, port, sender);
             } else if (ns.getBoolean("upload")) {
                 String fp = ns.getString("file");
