@@ -61,7 +61,6 @@ def api_put(fp, is_broadcast, host, port, sender):
 
   return True
 
-
 def api_ping(message, host, port, sender):
   client = grpc_client.Client(host, port, sender)
   client.ping(msg=message)

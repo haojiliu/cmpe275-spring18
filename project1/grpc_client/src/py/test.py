@@ -71,6 +71,7 @@ def main():
           'op': 'eq',
           'rhs': ['HCOT1', 'BBN']
         }])
+      print(params)
       return api.api_get(args.output, from_utc, to_utc, host, port, sender, params)
 
     elif args.upload:
@@ -84,7 +85,6 @@ def main():
   except Exception as e:
     print(e)
     parser.print_help()
-
 
 if __name__ == '__main__':
   main()

@@ -16,6 +16,7 @@ client = MongoClient()
 client = MongoClient('localhost', 27017)
 db = client.main_db
 weather_data = db['weather_data']
+# weather_data.remove({})
 
 # mesowest = db['mesowest']
 # mesonet = db['mesonet']
@@ -127,7 +128,7 @@ def get_cursor(target, params):
   filters = {
     'timestamp_utc': {
         '$gte': start,
-        '$lt': end
+        '$lte': end
     }
   }
 
