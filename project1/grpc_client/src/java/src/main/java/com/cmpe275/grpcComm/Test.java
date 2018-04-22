@@ -78,7 +78,7 @@ public class Test {
 				List<String> range = ns.getList("range");
 				String from_utc = range.get(0);
 				String to_utc = range.get(1);
-                JavaAPI.getAPI(ns.getString("output"), from_utc, to_utc, host, port, sender,"[{\"lhs\": \"TMPF\", \"op\": \"gt\", \"rhs\": \"0\"}, {\"lhs\": \"STN\", \"op\": \"eq\", \"rhs\": [\"HCOT1\", \"BBN\"]}]");
+                JavaAPI.getAPI(ns.getString("output"), from_utc, to_utc, host, port, sender,"[{\"lhs\": \"STN\", \"op\": \"eq\", \"rhs\": [\"HCOT1\", \"BBN\"]}]");
             } else if (ns.getBoolean("ping")) {
                 //System.out.println("start ping...");
                 JavaAPI.pingAPI(ns.getString("message"), host, port, sender);

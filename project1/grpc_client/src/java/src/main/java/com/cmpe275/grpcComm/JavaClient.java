@@ -279,8 +279,9 @@ public class JavaClient {
 		// if (param_json != null) {
 		// 	dosomething
 		// }
+
 		String uuid = UUID.randomUUID().toString();
-		QueryParams queryParams = QueryParams.newBuilder().setFromUtc(from_utc).setToUtc(to_utc).build();
+		QueryParams queryParams = QueryParams.newBuilder().setFromUtc(from_utc).setToUtc(to_utc).setParamJson(param_json).build();
 		MetaData metaData = MetaData.newBuilder().setUuid(uuid).build();
 		GetRequest getRequest = GetRequest.newBuilder().setMetaData(metaData).setQueryParams(queryParams).build();
 		Request req = Request.newBuilder().setFromSender(this.sender).setToReceiver(this.receiver).setGetRequest(getRequest).build();
