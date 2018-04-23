@@ -1,5 +1,5 @@
 # Haoji Liu
-import sys, os, json
+import sys, os, json, re
 import time
 import datetime
 import threading
@@ -18,14 +18,6 @@ db = client.main_db
 weather_data = db['weather_data']
 # weather_data.remove({})
 
-# mesowest = db['mesowest']
-# mesonet = db['mesonet']
-
-# TODO: for test only
-# mesowest.remove({})
-# mesonet.remove({})
-
-# TODO: update schema
 # SCHEMA:
 # db.data.insert({
 #     "uuid": // defined by the grpc client
@@ -43,8 +35,6 @@ CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
 
 CONST_STD_COL_LIST = 'STN YYMMDD/HHMM MNET SLAT SLON SELV TMPF SKNT DRCT GUST PMSL ALTI DWPF RELH WTHR P24I'.split()
 CONST_NUM_OF_COLS = len(CONST_STD_COL_LIST)
-
-CONST_DELIMITER = ','
 
 CONST_COL_TYPE_MAP = {
   'SLAT': float,
@@ -140,9 +130,6 @@ def get_cursor(target, params):
       op: try_cast_col(lhs, param['rhs'])
     }
 
-  logging.warning('..........')
-  logging.warning(filters)
-
   cursor = target.find(filters)
   return cursor
 
@@ -205,29 +192,56 @@ def sanitize(line):
   """remove extra spaces, tabs, trailing/leading spaces, etc."""
   return line.strip()
 
+def format_timestamp(timestamp):
+  """
+  convert from 20180316_2145 to 2018-03-16 21:45:00
+  """
+  try:
+    datetime.datetime.strptime(ts, CONST_TIMESTAMP_FMT)
+  except:
+    logging.warning('timestamp format failed, probably need conversion')
+    tuples = re.split('_|/', timestamp)
+    assert len(tuples) == 2
+    year = tuples[0][:4]
+    month = tuples[0][4:6]
+    day = tuples[0][6:8]
+    hour = tuples[1][:2]
+    minute = tuples[1][2:4]
+
+    return '%s-%s-%s %s:%s:00' % (year, month, day, hour, minute)
+  return timestamp
+
 def deserialize(line):
   """split a line int columns"""
-  cols = line.split(CONST_DELIMITER)
+  if ',' in line:
+    cols = re.split(',', line)
+  else:
+    # we assume it's space separated
+    cols = re.split('\s', line)
+
+  cols = list(filter(None, cols))
   logging.warning(cols)
 
   assert len(cols) == CONST_NUM_OF_COLS
-  logging.warning('hey deserialize...')
 
   station = cols[0]
-  ts = cols[1]
+  ts = format_timestamp(cols[1])
+  logging.warning(ts)
 
   d = {
     'station': station,
     'raw': line,
     'timestamp_utc': datetime.datetime.strptime(ts, CONST_TIMESTAMP_FMT),
     'created_at_utc': datetime.datetime.now(),
-    'hash': get_hash(line)
+    'hash': get_hash(station+ts)
   }
+  logging.warning(d)
 
   # Adding all columns
   for idx, val in enumerate(CONST_STD_COL_LIST):
     d[val] = try_cast_col(val, cols[idx])
 
+  logging.warning(d)
   return d
 
 def get_hash(s):
@@ -256,9 +270,8 @@ def write(sock):
           continue
         d = deserialize(line)
         d['uuid'] = uuid
-      except:
+      except Exception as e:
         logging.warning('something wrong with writing this line %s' % line)
-        logging.exception()
         continue
       # if nothing wrong, write this line
       logging.warning('Going to write the following station to the db node: %s' % d)

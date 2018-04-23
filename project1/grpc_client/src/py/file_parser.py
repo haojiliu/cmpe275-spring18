@@ -1,6 +1,6 @@
 # Author: Haoji Liu
-import uuid
-import os
+import uuid, datetime
+import os, re
 
 from data_pb2 import Request, PutRequest, DatFragment, MetaData
 
@@ -34,12 +34,12 @@ CONST_STD_COL_LIST = CONST_MESOWEST_HEADER.split()
 CONST_MESONET_COL_LIST = ['id','name','mesonet','lat','lon','elevation','agl','cit','state','country','active']
 
 
-def format_timestamp_mesonet(timestamp):
+def format_timestamp(timestamp):
   """
   convert from 20180316_2145 to 2018-03-16 21:45:00
   """
   try:
-    tuples = timestamp.split('_')
+    tuples = re.split('_|/', timestamp)
     assert len(tuples) == 2
     year = tuples[0][:4]
     month = tuples[0][4:6]
@@ -47,8 +47,13 @@ def format_timestamp_mesonet(timestamp):
     hour = tuples[1][:2]
     minute = tuples[1][2:4]
 
-    return '%s-%s-%s %s:%s:00' % (year, month, day, hour, minute)
+    res = '%s-%s-%s %s:%s:00' % (year, month, day, hour, minute)
+    # make sure it's a valid timestamp
+    datetime.datetime.strptime(res, CONST_TIMESTAMP_FMT)
+    return res
+
   except:
+    raise
     return None
 
 def format_timestamp_mesowest(timestamp):
@@ -107,7 +112,7 @@ def parse_file(fpath):
   is_mesonet = False
 
   filename, file_extension = os.path.splitext(fpath.split('/')[-1])
-  timestamp_utc = format_timestamp_mesonet(filename)
+  timestamp_utc = format_timestamp(filename)
   is_mesonet = timestamp_utc is not None
   with open(fpath) as f:
     for line in f:
@@ -125,12 +130,10 @@ def parse_file(fpath):
       if not is_starts_reading:
         continue
 
-      # we can't call strip() here as it will remove the newline char
       data_source = CONST_MEDIA_TYPE_TEXT_MESONET if is_mesonet else CONST_MEDIA_TYPE_TEXT_MESOWEST
       try:
-        normalized_line = normalize(line, data_source, timestamp_utc)
+        normalized_line = normalize(line.strip(), data_source, timestamp_utc)
       except Exception as e:
-        print(e)
         print('skipping line: %s' % line)
         continue
       buffer.append(normalized_line)
