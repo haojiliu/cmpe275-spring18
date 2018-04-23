@@ -40,7 +40,7 @@ def api_get(fpath, from_utc, to_utc, host, port, sender, params_json=None):
 def api_put(fp, is_broadcast, host, port, sender):
   client = grpc_client.Client(host, port, sender)
 
-  is_local_put_failed = False
+  #is_local_put_failed = False
   if not is_broadcast:
     res = client.put(fpath=fp)
   if is_broadcast or not res:
