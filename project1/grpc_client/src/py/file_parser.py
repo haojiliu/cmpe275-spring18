@@ -53,7 +53,6 @@ def format_timestamp(timestamp):
     return res
 
   except:
-    raise
     return None
 
 def format_timestamp_mesowest(timestamp):

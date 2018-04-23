@@ -19,7 +19,6 @@ def api_get(fpath, from_utc, to_utc, host, port, sender, params_json=None):
     datetime.datetime.strptime(from_utc, CONST_TIMESTAMP_FMT)
     datetime.datetime.strptime(to_utc, CONST_TIMESTAMP_FMT)
   except:
-    raise
     return False
 
   with open(fpath, 'w') as fp:

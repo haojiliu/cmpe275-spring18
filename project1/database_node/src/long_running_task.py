@@ -197,7 +197,7 @@ def format_timestamp(timestamp):
   convert from 20180316_2145 to 2018-03-16 21:45:00
   """
   try:
-    datetime.datetime.strptime(ts, CONST_TIMESTAMP_FMT)
+    datetime.datetime.strptime(timestamp, CONST_TIMESTAMP_FMT)
   except:
     logging.warning('timestamp format failed, probably need conversion')
     tuples = re.split('_|/', timestamp)

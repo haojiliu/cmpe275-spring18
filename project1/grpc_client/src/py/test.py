@@ -61,17 +61,17 @@ def main():
       from_utc, to_utc = args.range[0], args.range[1]
       assert from_utc
       assert to_utc
-      params = json.dumps([{
-          'lhs': 'TMPF',
-          'op': 'gt',
-          'rhs': '0'
-        },
-        {
-          'lhs': 'STN',
-          'op': 'eq',
-          'rhs': ['HCOT1', 'BBN']
-        }])
-      print(params)
+      # params = json.dumps([{
+      #     'lhs': 'TMPF',
+      #     'op': 'gt',
+      #     'rhs': '0'
+      #   },
+      #   {
+      #     'lhs': 'STN',
+      #     'op': 'eq',
+      #     'rhs': ['HCOT1', 'BBN']
+      #   }])
+      params = ''
       return api.api_get(args.output, from_utc, to_utc, host, port, sender, params)
 
     elif args.upload:
