@@ -6,4 +6,4 @@ curl $url
 echo "build cluster..."
 docker-compose build --no-cache
 echo "bring up cluster..."
-docker-compose up -d
+docker-compose up -d grpc
