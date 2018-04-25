@@ -29,7 +29,7 @@ weather_data = db['weather_data']
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
 
-CONST_DB_LOWER_BOUND = 10000 * 1024 * 1024 # 10000 MB
+CONST_DB_LOWER_BOUND = 1 * 1024 * 1024 # 1 MB
 
 CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
 
@@ -52,7 +52,6 @@ def is_disk_full():
   """
   logging.warning('available space %s' % os.statvfs('/data/db').f_bavail)
   val = os.statvfs('/data/db').f_bavail < CONST_DB_LOWER_BOUND
-  logging.warning(val)
   return val
 
 def get_op_from_additional_params(param):
@@ -75,7 +74,7 @@ def get_op_from_additional_params(param):
 
 def try_cast_col(col, val):
   """In case we need float instead of string"""
-  logging.warning('try casting %s for column %s' % (val, col))
+  # logging.warning('try casting %s for column %s' % (val, col))
   cast_val = val
   if col in CONST_COL_TYPE_MAP:
     if isinstance(val, list):
@@ -147,7 +146,7 @@ def connect_write_port(context):
   # to get write requests
   write_sock = context.socket(zmq.SUB)
   connect_string = 'tcp://{}:{}'.format(
-      write_host, constants.write_port)
+      write_host, constants.write_sub_port)
   write_sock.connect(connect_string)
   write_sock.setsockopt(zmq.SUBSCRIBE, b"")
   time.sleep(1)
@@ -159,7 +158,6 @@ def serialize(doc):
 
   Returns byte string
   """
-  logging.warning(doc)
   return doc['raw'].encode()
 
 def read(sock):
@@ -199,7 +197,7 @@ def format_timestamp(timestamp):
   try:
     datetime.datetime.strptime(timestamp, CONST_TIMESTAMP_FMT)
   except:
-    logging.warning('timestamp format failed, probably need conversion')
+    # logging.warning('timestamp format failed, probably need conversion')
     tuples = re.split('_|/', timestamp)
     assert len(tuples) == 2
     year = tuples[0][:4]
@@ -220,13 +218,11 @@ def deserialize(line):
     cols = re.split('\s', line)
 
   cols = list(filter(None, cols))
-  logging.warning(cols)
 
   assert len(cols) == CONST_NUM_OF_COLS
 
   station = cols[0]
   ts = format_timestamp(cols[1])
-  logging.warning(ts)
 
   d = {
     'station': station,
@@ -235,13 +231,11 @@ def deserialize(line):
     'created_at_utc': datetime.datetime.now(),
     'hash': get_hash(station+ts)
   }
-  logging.warning(d)
 
   # Adding all columns
   for idx, val in enumerate(CONST_STD_COL_LIST):
     d[val] = try_cast_col(val, cols[idx])
 
-  logging.warning(d)
   return d
 
 def get_hash(s):
@@ -274,7 +268,6 @@ def write(sock):
         logging.warning('something wrong with writing this line %s' % line)
         continue
       # if nothing wrong, write this line
-      logging.warning('Going to write the following station to the db node: %s' % d)
       _write(d, weather_data)
     logging.warning('Write succeeded...')
 

@@ -10,6 +10,10 @@ zmq_read_host = '0.0.0.0'
 read_client_port = 5559
 read_worker_port = 5560
 
+zmq_write_host = '0.0.0.0'
+write_pub_port = 8081
+write_sub_port = 8082
+
 DB_FILE_PATH = '/srv/tmp.db'
 
 EMAILER_SENDER = 'cmpe275server@gmail.com'

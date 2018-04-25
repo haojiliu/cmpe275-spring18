@@ -16,7 +16,7 @@ write_host = util.try_get_ip(constants.zmq_write_host)
 read_host = util.try_get_ip(constants.zmq_read_host)
 
 write_connect_string = 'tcp://{}:{}'.format(
-    write_host, constants.write_port)
+    write_host, constants.write_pub_port)
 
 read_connect_string = 'tcp://{}:{}'.format(
     read_host, constants.read_client_port)
@@ -26,7 +26,7 @@ CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
 def get_write_socket():
   write_sock = zmq_context.socket(zmq.PUB)
 
-  write_sock.bind(write_connect_string)
+  write_sock.connect(write_connect_string)
   # TODO: try not rebind with every grpc call, let's do a timeout of 4 hour or something
   time.sleep(1) # this is needed so that we talk after the bind is complete!
   logging.warning('write socket connected to %s' % write_connect_string)
@@ -46,7 +46,6 @@ def get_read_socket():
 
 def read(sock, params):
   logging.warning('trying to send a req to read socket...')
-  logging.warning(sock)
   sock.send_json(params)
   # wait for response
   logging.warning('waiting for read response...')
@@ -87,7 +86,6 @@ def pre_read_check(params):
 def pre_write_check():
   # TODO: if we can't handle the data, send data to other clusters
   for resp in try_read({'pre_write_check': True}):
-    logging.warning('inside pre write check... %s' % resp)
     if resp.decode() == 'True':
       logging.warning('disk full!!!!')
       return False

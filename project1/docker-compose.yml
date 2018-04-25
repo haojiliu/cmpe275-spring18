@@ -8,13 +8,12 @@ services:
     container_name: cmpe275_grpc
     ports:
       - "8080:8080" # for local to make grpc call to container
-      - "8081:8081" # for write socket
       - "9004:9004" # supervisord
     tty: true
   db:
     ports:
       - "9003:9003" # supervisord
-      - "28017:28017" # mongo http port
+      # - "28017:28017" # mongo http port
     volumes:
       - ./database_node/src:/srv/src
     build: ./database_node
@@ -25,7 +24,9 @@ services:
       - "9002:9002" # supervisord
       - "5559:5559" # read client port
       - "5560:5560" # read worker port
-      - "80:80" # heartbeat register
+      # - "5000:5000" # heartbeat register
+      - "8081:8081" # grpc servers publish to
+      - "8082:8082" # db nodes subscribe to
     # So that wysiwyg
     volumes:
       - ./task_scheduler/src:/srv/src
