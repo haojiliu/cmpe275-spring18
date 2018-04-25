@@ -2,28 +2,10 @@
 
 RFC: Climate Facts Big Data Storage and Query Pipeline
 
-## FOR THE DEMO:
-* make sure you have docker installed, and then run this:
+## THIS DOC IS OUTDATED, see the report here:
+
 ```
-cd base_image/
-docker build -t cmpe275_base_image .
-cd database_node/
-docker build -t cmpe275_db_base_image database_node/db_base_image/
-```
-
-* for database node - Ankit and Ryan make sure they can run this:
-```
-docker-compose build db
-docker-compose up -d db
-
-# to ssh into the container:
-
-docker exec -it cmpe275_db bash
-
-# to tail the logs in the container:
-
-tail -f /srv/logs/*.log
-
+https://docs.google.com/document/d/1qvMptHeFKigBKweQIgjRAfIDAKr8o_J1wTIFLE1OG5s/edit#heading=h.b9n42j21jex8
 ```
 
 ### whenever the IP addr changes or is assigned to your node, do the following:
