@@ -83,7 +83,7 @@ def main():
       return api.api_ping(args.message, host, port, sender)
 
   except Exception as e:
-    print(e)
+    raise
     parser.print_help()
 
 if __name__ == '__main__':

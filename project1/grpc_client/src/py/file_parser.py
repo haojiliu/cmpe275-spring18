@@ -133,7 +133,7 @@ def parse_file(fpath):
       try:
         normalized_line = normalize(line.strip(), data_source, timestamp_utc)
       except Exception as e:
-        print('skipping line: %s' % line)
+        #print('skipping line: %s' % line)
         continue
       buffer.append(normalized_line)
 

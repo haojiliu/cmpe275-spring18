@@ -7,7 +7,10 @@ import requests
 
 CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
 
-nodes = requests.get('https://cmpe275-spring-18.mybluemix.net/get').text.split(',')
+try:
+  nodes = requests.get('https://cmpe275-spring-18.mybluemix.net/get').text.split(',')
+except:
+  nodes = ['169.254.230.239', '169.254.51.179', '169.254.198.56']
 print('getting nodes list %s' % nodes)
 
 def api_get(fpath, from_utc, to_utc, host, port, sender, params_json=None):
@@ -38,10 +41,12 @@ def api_get(fpath, from_utc, to_utc, host, port, sender, params_json=None):
   return True
 
 def api_put(fp, is_broadcast, host, port, sender):
-  client = grpc_client.Client(host, port, sender)
-
   if not is_broadcast:
-    res = client.put(fpath=fp)
+    try:
+      client = grpc_client.Client(host, port, sender)
+      res = client.put(fpath=fp)
+    except:
+      res = False
   if is_broadcast or not res:
     print('going to broadcast...')
     for node in nodes:
@@ -51,7 +56,8 @@ def api_put(fp, is_broadcast, host, port, sender):
       try:
         client = grpc_client.Client(node, port, host)
         if client.put(fpath=fp):
-          print('put succeeded at %s' % node)
+          print('put succeeded at %s, going to quit' % node)
+          break
       except Exception as e:
         print(e)
         print('put failed at node %s' % node)

@@ -29,7 +29,7 @@ weather_data = db['weather_data']
 read_host = util.try_get_ip(constants.zmq_read_host)
 write_host = util.try_get_ip(constants.zmq_write_host)
 
-CONST_DB_LOWER_BOUND = 1 * 1024 * 1024 # 1 MB
+CONST_DB_LOWER_BOUND = 10000 * 1024 * 1024 # 10000 MB
 
 CONST_TIMESTAMP_FMT = '%Y-%m-%d %H:%M:%S'
 

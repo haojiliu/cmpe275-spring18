@@ -40,7 +40,7 @@ class Client():
     if resp.code == 2:
       print('write failed at this node!')
       return False
-    print('returning true!')
+    print('writing succeeded!')
     return True
 
   def get(self, fp, from_utc, to_utc, params_json):

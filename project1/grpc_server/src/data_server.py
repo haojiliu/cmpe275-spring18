@@ -87,10 +87,11 @@ def pre_read_check(params):
 def pre_write_check():
   # TODO: if we can't handle the data, send data to other clusters
   for resp in try_read({'pre_write_check': True}):
-    logging.warning(resp)
-    if str(resp) == 'True':
+    logging.warning('inside pre write check... %s' % resp)
+    if resp.decode() == 'True':
       logging.warning('disk full!!!!')
       return False
+  logging.warning('disk not full...')
   return True
 
 def write(payload):
