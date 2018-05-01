@@ -8,15 +8,6 @@ RFC: Climate Facts Big Data Storage and Query Pipeline
 https://docs.google.com/document/d/1qvMptHeFKigBKweQIgjRAfIDAKr8o_J1wTIFLE1OG5s/edit#heading=h.b9n42j21jex8
 ```
 
-### whenever the IP addr changes or is assigned to your node, do the following:
-
-* for Ryan and Ankit, update /srv/src/constants.py with Haoji and Jason's new IP, go to localhost:9003, and then restart requestHandler
-* for Jason, do nothing, just tell Ryan Ankit and Haoji what his new IP address is
-* for Haoji, update /srv/src/constants.py, go to localhost:9004, and then restart grpcServer, tell Ryan and Ankit his new IP
-
-
-## TODO: implement some sort of Raft
-## TODO: same data query multiple times
 ## TODO: mongodb OpLog replication?
 
 ## Business Goal:
