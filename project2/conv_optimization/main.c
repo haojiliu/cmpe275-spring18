@@ -60,24 +60,16 @@ int main(int argc, char *argv[])
 		 "openmp & simd & loop unroll",
 		 "openmp & simd & loop unroll & register block"};
 
-	const int enables[NUM_OF_OPTIMIZATIONS] = { /* whether or not enable the test of some optimizations */
-		 ENABLE,ENABLE,ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE};
-		 /*
-		 ENABLE,
-		 ENABLE,
-		 ENABLE,
-		 ENABLE,
-		 ENABLE,
-	     ENABLE,
-		 ENABLE,
-		 ENABLE,
-		 ENABLE};*/
+	// const int enables[NUM_OF_OPTIMIZATIONS] = { /* whether or not enable the test of some optimizations */
+	// 	 ENABLE,ENABLE,ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE};
+
+  const int enables[NUM_OF_OPTIMIZATIONS] = { /* whether or not enable the test of some optimizations */
+  	 0,1,0,0,0,0,0,0,0};
 
 	/* Do multiple experiments. Measure the average runtime. */
 	const int NUM_OF_EXPERIMENTS = 50;
 
 	for (int i = 0; i < NUM_OF_EXPERIMENTS; i++) {
-
 		for (int j = 0; j < NUM_OF_OPTIMIZATIONS; j++) {
 			if (enables[j]) {
 				matrix1s[j] = _mm_malloc(WIDTH1*HEIGHT1*sizeof(uint16_t), 64);
