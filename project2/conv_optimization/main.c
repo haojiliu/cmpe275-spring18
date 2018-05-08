@@ -60,11 +60,11 @@ int main(int argc, char *argv[])
 		 "openmp & simd & loop unroll",
 		 "openmp & simd & loop unroll & register block"};
 
-	// const int enables[NUM_OF_OPTIMIZATIONS] = { /* whether or not enable the test of some optimizations */
-	// 	 ENABLE,ENABLE,ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE};
+	const int enables[NUM_OF_OPTIMIZATIONS] = { /* whether or not enable the test of some optimizations */
+		 ENABLE,ENABLE,ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE};
 
-  const int enables[NUM_OF_OPTIMIZATIONS] = { /* whether or not enable the test of some optimizations */
-  	 0,1,0,0,0,0,0,0,0};
+  // const int enables[NUM_OF_OPTIMIZATIONS] = { /* whether or not enable the test of some optimizations */
+  // 	 0,1,0,0,0,0,0,0,0};
 
 	/* Do multiple experiments. Measure the average runtime. */
 	const int NUM_OF_EXPERIMENTS = 50;

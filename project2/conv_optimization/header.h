@@ -17,10 +17,9 @@
 #define HEIGHT2 1024
 
 #define LINE_SIZE 64
-#define L1_SIZE (32*1024)
+// There's no L1 and L4 cache in mbp
 #define L2_SIZE (256*1024)
-#define L3_SIZE (6144*1024)
-#define L4_SIZE (131072*1024)
+#define L3_SIZE (4096*1024)
 
 #define NUM_OF_OPTIMIZATIONS 9
 

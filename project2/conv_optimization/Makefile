@@ -1,5 +1,5 @@
 CXX = gcc-7
-CFLAGS=-Wall -mavx2 -mfma -O1 -std=c99 -fopenmp
+CFLAGS=-Wall -mavx2 -mfma -fopenmp
 CFILES= main.c header.h utils.c optimizations.c
 all:
 	$(CXX) $(CFLAGS) $(CFILES) -lm -o main

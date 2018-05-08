@@ -3,6 +3,9 @@
 
 void naive(uint64_t* restrict result,
 		const uint16_t* restrict matrix1, const uint16_t* restrict matrix2) {
+  /*
+  Multiples matrix1 with matrix2 using convolution, store the output to result
+  */
 	memset(result, 0, WIDTH2*HEIGHT2*sizeof(uint64_t));
 	for (int i = 0; i < WIDTH2; i++)
 	{
