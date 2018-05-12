@@ -1,7 +1,6 @@
 /*
  ============================================================================
  Name        : main.c
- Author      : Jason Su and Harry He
  Version     : 1.0.0
  Copyright   : GNU
  Description : 7*7 1024*1024 2-D non-separable convolution
@@ -42,32 +41,26 @@ int main(int argc, char *argv[])
 		 naive,
 		 openmp,
 		 simd,
-		 cacheBlock,
 		 loopUnroll,
-		 registerBlock,
 		 openmp_simd,
-		 openmp_simd_loopUnroll,
-		 openmp_simd_loopUnroll_registerBlock};
+		 openmp_simd_loopUnroll};
 
 	const char*   names[NUM_OF_OPTIMIZATIONS] ={ /* optimization names */
 		 "naive",
 		 "openmp",
 		 "simd",
-		 "cache block",
 		 "loop unroll",
-		 "register block",
 		 "openmp & simd",
-		 "openmp & simd & loop unroll",
-		 "openmp & simd & loop unroll & register block"};
+		 "openmp & simd & loop unroll"};
 
 	const int enables[NUM_OF_OPTIMIZATIONS] = { /* whether or not enable the test of some optimizations */
-		 ENABLE,ENABLE,ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE, ENABLE};
+		 ENABLE,ENABLE,ENABLE, ENABLE, ENABLE, ENABLE};
 
   // const int enables[NUM_OF_OPTIMIZATIONS] = { /* whether or not enable the test of some optimizations */
   // 	 0,1,0,0,0,0,0,0,0};
 
 	/* Do multiple experiments. Measure the average runtime. */
-	const int NUM_OF_EXPERIMENTS = 50;
+	const int NUM_OF_EXPERIMENTS = 20;
 
 	for (int i = 0; i < NUM_OF_EXPERIMENTS; i++) {
 		for (int j = 0; j < NUM_OF_OPTIMIZATIONS; j++) {
