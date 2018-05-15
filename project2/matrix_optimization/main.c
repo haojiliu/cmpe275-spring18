@@ -1,7 +1,6 @@
 /*
  ============================================================================
  Name        : main.c
- Author      : Jason Su and Harry He
  Version     : 1.0.0
  Copyright   : GNU
  Description : 1024*1024 double-precision matrix multliplication
