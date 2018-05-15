@@ -30,8 +30,7 @@ int main(int argc, char *argv[])
 	srand (time(NULL));
 	omp_set_num_threads(8);
 
-	uint16_t* matrix1s[NUM_OF_OPTIMIZATIONS] = {};
-	uint16_t* matrix2s[NUM_OF_OPTIMIZATIONS] = {};
+
 	uint64_t* results[NUM_OF_OPTIMIZATIONS] = {}; /* Store the outputs of optimizations */
 	uint64_t* references[NUM_OF_OPTIMIZATIONS] = {};
 	double  times[NUM_OF_OPTIMIZATIONS] = {}; /* Store the time measurement of optimizations */
@@ -62,46 +61,49 @@ int main(int argc, char *argv[])
 	/* Do multiple experiments. Measure the average runtime. */
 	const int NUM_OF_EXPERIMENTS = 20;
 
+  // init two matrices
+  uint16_t * matrix1 = _mm_malloc(WIDTH1*HEIGHT1*sizeof(uint16_t), 64);
+  uint16_t * matrix2 = _mm_malloc((WIDTH2*HEIGHT2+2*PAD)*sizeof(uint16_t), 64);
+  for (int i = 0; i < PAD; i++) {
+    matrix2[i] = 0;
+  }
+  matrix2 += PAD;
+  for (int k = 0; k < WIDTH1*HEIGHT1; k++) {
+      matrix1[k] = rand()%65535;
+  }
+  for (int k = 0; k < WIDTH2*HEIGHT2; k++) {
+    matrix2[k] = rand()%65535;
+  }
+
 	for (int i = 0; i < NUM_OF_EXPERIMENTS; i++) {
 		for (int j = 0; j < NUM_OF_OPTIMIZATIONS; j++) {
 			if (enables[j]) {
-				matrix1s[j] = _mm_malloc(WIDTH1*HEIGHT1*sizeof(uint16_t), 64);
-				matrix2s[j] = _mm_malloc((WIDTH2*HEIGHT2+2*PAD)*sizeof(uint16_t), 64);
-				for (int i = 0; i < PAD; i++) {
-					matrix2s[j][i] = 0;
-				}
-				matrix2s[j] += PAD;
-				for (int k = 0; k < WIDTH1*HEIGHT1; k++) {
-						matrix1s[j][k] = rand()%65535;
-				}
-
-				for (int k = 0; k < WIDTH2*HEIGHT2; k++) {
-					matrix2s[j][k] = rand()%65535;
-				}
 				results[j] = _mm_malloc(WIDTH2*HEIGHT2*sizeof(uint64_t), 64);
 				references[j] = _mm_malloc(WIDTH2*HEIGHT2*sizeof(uint64_t), 64);
 				uint64_t start = timestamp_us();
-				functions[j](results[j], matrix1s[j], matrix2s[j]);
-				times[j] += (timestamp_us() - start) / 1000000.0 / NUM_OF_EXPERIMENTS;
+				functions[j](results[j], matrix1, matrix2);
+				times[j] += (timestamp_us() - start);
 				if (i == 0) {
-					naive(references[j], matrix1s[j], matrix2s[j]);
+					naive(references[j], matrix1, matrix2);
 					errors[j] = compare_matrix(results[j], references[j]);
 				}
-				_mm_free(matrix1s[j]);
-				_mm_free(matrix2s[j]-PAD);
 				_mm_free(results[j]);
 				_mm_free(references[j]);
 			}
 		}
 	}
 
+  // free two matrices
+  _mm_free(matrix1);
+  _mm_free(matrix2-PAD);
+
 	for (int i = 0; i < NUM_OF_OPTIMIZATIONS; i++) {
 		/* Output time measurement results */
 		if (enables[i]) {
 			if (!enables[0])
-				printf("%-65s:%.3f\n", names[i], times[i]);
+				printf("%-65s:%.3f\n", names[i], times[i] / 1000000L / NUM_OF_EXPERIMENTS);
 			else
-				printf("%-65s:%.3f speedup: %.4f\n", names[i], times[i], times[0]/times[i]);
+				printf("%-65s:%.3f speedup: %.4f\n", names[i],  times[i] / 1000000L / NUM_OF_EXPERIMENTS, times[0]/times[i]);
 		}
 
 		/* Error Handling */
