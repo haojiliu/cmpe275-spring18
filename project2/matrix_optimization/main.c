@@ -42,25 +42,17 @@ int main(int argc, char *argv[])
 		 naive,
 		 openmp,
 		 simd,
-		 cacheBlock,
 		 loopUnroll,
-		 registerBlock,
 		 openmp_simd,
-		 openmp_simd_cacheBlock,
-		 openmp_simd_cacheBlock_loopUnroll,
-		 openmp_simd_cacheBlock_loopUnroll_registerBlock};
+		 openmp_simd_loopUnroll};
 
 	const char*   names[NUM_OF_OPTIMIZATIONS] ={ /* optimization names */
 		 "naive",
 		 "openmp",
 		 "simd",
-		 "cache block",
 		 "loop unroll",
-		 "register block",
 		 "openmp & simd",
-		 "openmp & simd & cache block",
-		 "openmp & simd & cache block & loop unroll",
-		 "openmp & simd & cache block & loop unroll & register block"};
+		 "openmp & simd & loop unroll"};
 
 	const int enables[NUM_OF_OPTIMIZATIONS] = { /* whether or not enable the test of some optimizations */
 		 ENABLE,
@@ -68,14 +60,10 @@ int main(int argc, char *argv[])
 		 ENABLE,
 		 ENABLE,
 		 ENABLE,
-		 ENABLE,
-	     ENABLE,
-		 ENABLE,
-		 ENABLE,
 		 ENABLE};
 
 	/* Do multiple experiments. Measure the average runtime. */
-	const int NUM_OF_EXPERIMENTS = 5;
+	const int NUM_OF_EXPERIMENTS = 20;
 
 	for (int i = 0; i < NUM_OF_EXPERIMENTS; i++) {
 

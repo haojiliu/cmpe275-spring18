@@ -16,7 +16,7 @@
 #define L3_SIZE (6144*1024)
 #define L4_SIZE (131072*1024)
 
-#define NUM_OF_OPTIMIZATIONS 10
+#define NUM_OF_OPTIMIZATIONS 6
 
 
 extern int compare_matrix(const double* sample, const double* reference);
@@ -30,25 +30,13 @@ extern void openmp(double* restrict result,
 extern void simd(double* restrict result,
 		const double* restrict matrix1, const double* restrict matrix2);
 
-extern void cacheBlock(double* restrict result,
-		const double* restrict matrix1, const double* restrict matrix2);
-
 extern void loopUnroll(double* restrict result,
-		const double* restrict matrix1, const double* restrict matrix2);
-
-extern void registerBlock(double* restrict result,
 		const double* restrict matrix1, const double* restrict matrix2);
 
 extern void openmp_simd(double* restrict result,
 		const double* restrict matrix1, const double* restrict matrix2);
 
-extern void openmp_simd_cacheBlock(double* restrict result,
-		const double* restrict matrix1, const double* restrict matrix2);
-
-extern void openmp_simd_cacheBlock_loopUnroll(double* restrict result,
-		const double* restrict matrix1, const double* restrict matrix2);
-
-extern void openmp_simd_cacheBlock_loopUnroll_registerBlock(double* restrict result,
+extern void openmp_simd_loopUnroll(double* restrict result,
 		const double* restrict matrix1, const double* restrict matrix2);
 
 #endif
